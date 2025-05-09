@@ -16,9 +16,10 @@
 #include "../include/config.h"
 #include <windowsx.h>
 #include <shellapi.h>
+#include "../include/audio_player.h"  // 添加音频播放器头文件
 
 // 函数声明
-void ParseContributorInfo(const wchar_t* contributor, wchar_t* name, size_t nameSize, wchar_t* url, size_t urlSize);
+static void DrawColorSelectButton(HDC hdc, HWND hwnd);
 
 // 从main.c引入的变量
 extern char inputText[256];
@@ -38,41 +39,14 @@ WNDPROC wpOrigEditProc;
 // 添加全局变量来跟踪关于对话框句柄
 static HWND g_hwndAboutDlg = NULL;
 
-// 添加全局变量来跟踪鸣谢对话框句柄
-static HWND g_hwndCreditsDialog = NULL;
-
-// 添加全局变量来跟踪支持对话框句柄
-static HWND g_hwndSupportDialog = NULL;
-
-// 添加全局变量来跟踪许可证对话框句柄
-static HWND g_hwndLicenseDialog = NULL;
+// 添加全局变量来跟踪错误对话框句柄
+static HWND g_hwndErrorDlg = NULL;
 
 // 添加循环次数编辑框的子类化过程
 static WNDPROC wpOrigLoopEditProc;  // 存储原始的编辑框过程
 
-// 贡献者链接定义
-static const wchar_t* CONTRIBUTOR_LINKS[] = {
-    L"[MAX°孟兆](https://github.com/MadMaxChow)",              // CONTRIBUTOR_1
-    L"[XuJilong](https://github.com/sumruler)",                // CONTRIBUTOR_2
-    L"[zggsong](https://github.com/ZGGSONG)",                  // CONTRIBUTOR_3
-    L"[猫屋敷梨梨Official](https://space.bilibili.com/26087398)", // CONTRIBUTOR_4
-    L"[MOJIもら](https://space.bilibili.com/6189012)",         // CONTRIBUTOR_5
-    L"[李康](https://space.bilibili.com/475437261)",           // CONTRIBUTOR_6
-    L"[我是无名吖](https://space.bilibili.com/1708573954)",     // CONTRIBUTOR_7
-    L"[flying-hilichurl](https://github.com/flying-hilichurl)", // CONTRIBUTOR_8
-    L"[双脚猫](https://space.bilibili.com/161061562)",         // CONTRIBUTOR_9
-    L"[rsyqvthv](https://github.com/rsyqvthv)",                // CONTRIBUTOR_10
-    L"[洋仓鼠](https://space.bilibili.com/297146893)",         // CONTRIBUTOR_11
-    L"[学习马楼](https://space.bilibili.com/3546380188519387)", // CONTRIBUTOR_12
-    L"[睡着的火山](https://space.bilibili.com/8010065)",        // CONTRIBUTOR_13
-    L"[星空下数羊](https://space.bilibili.com/5549978)",        // CONTRIBUTOR_14
-    L"[青阳忘川](https://space.bilibili.com/13129221)",         // CONTRIBUTOR_15
-    L"[William](https://github.com/llfWilliam)",               // CONTRIBUTOR_16
-    L"[王野](https://github.com/wangye99)",                    // CONTRIBUTOR_17
-    L"[风增](https://space.bilibili.com/470931145)",           // CONTRIBUTOR_18
-    L"[煮酒论科技](https://space.bilibili.com/572042200)",       // CONTRIBUTOR_19
-    L"[田春](https://space.bilibili.com/266931550)"            // CONTRIBUTOR_20 - 新增
-};
+// 添加常量字符串
+#define URL_GITHUB_REPO L"https://github.com/vladelaina/Catime"
 
 // 子类化编辑框过程
 LRESULT APIENTRY EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -159,6 +133,13 @@ INT_PTR CALLBACK DlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
             hEditBrush = CreateSolidBrush(RGB(0xFF, 0xFF, 0xFF));
             hButtonBrush = CreateSolidBrush(RGB(0xFD, 0xFD, 0xFD));
 
+            // 检查对话框ID是否为快捷倒计时选项对话框，如果是则设置标题
+            DWORD dlgId = GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+            if (dlgId == CLOCK_IDD_SHORTCUT_DIALOG || 
+                GetDlgCtrlID((HWND)lParam) == CLOCK_IDD_SHORTCUT_DIALOG) {
+                SetWindowTextW(hwndDlg, GetLocalizedString(L"倒计时预设", L"Countdown Presets"));
+            }
+
             // 获取编辑框控件的句柄
             HWND hwndEdit = GetDlgItem(hwndDlg, CLOCK_IDC_EDIT);
 
@@ -182,9 +163,9 @@ INT_PTR CALLBACK DlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
             int month_num = 0;
             while (++month_num <= 12 && strcmp(month, months[month_num-1]));
 
-            // 格式化日期时间为YYYY/MM/DD HH:MM:SS
-            wchar_t timeStr[50];
-            swprintf(timeStr, 50, L"最后编译日期：%04d/%02d/%02d %02d:%02d:%02d",
+            // 格式化日期时间为YYYY/MM/DD HH:MM:SS 并添加 UTC+8 标识
+            wchar_t timeStr[60];
+            swprintf(timeStr, 60, L"最后编译日期：%04d/%02d/%02d %02d:%02d:%02d (UTC+8)",
                     year, month_num, day, hour, min, sec);
 
             // 设置控件文本
@@ -335,9 +316,9 @@ INT_PTR CALLBACK AboutDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lPar
             int month_num = 0;
             while (++month_num <= 12 && strcmp(month, months[month_num-1]));
 
-            // 格式化日期时间为YYYY/MM/DD HH:MM:SS
-            wchar_t timeStr[50];
-            swprintf(timeStr, 50, L"最后编译日期：%04d/%02d/%02d %02d:%02d:%02d",
+            // 格式化日期时间为YYYY/MM/DD HH:MM:SS 并添加 UTC+8 标识
+            wchar_t timeStr[60];
+            swprintf(timeStr, 60, L"最后编译日期：%04d/%02d/%02d %02d:%02d:%02d (UTC+8)",
                     year, month_num, day, hour, min, sec);
 
             // 设置控件文本
@@ -351,19 +332,6 @@ INT_PTR CALLBACK AboutDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lPar
                 DestroyIcon(hLargeIcon);
                 hLargeIcon = NULL;
             }
-            // 关闭所有子对话框
-            if (g_hwndCreditsDialog && IsWindow(g_hwndCreditsDialog)) {
-                EndDialog(g_hwndCreditsDialog, 0);
-                g_hwndCreditsDialog = NULL;
-            }
-            if (g_hwndSupportDialog && IsWindow(g_hwndSupportDialog)) {
-                EndDialog(g_hwndSupportDialog, 0);
-                g_hwndSupportDialog = NULL;
-            }
-            if (g_hwndLicenseDialog && IsWindow(g_hwndLicenseDialog)) {
-                EndDialog(g_hwndLicenseDialog, 0);
-                g_hwndLicenseDialog = NULL;
-            }
             g_hwndAboutDlg = NULL;  // 清除对话框句柄
             break;
 
@@ -374,13 +342,20 @@ INT_PTR CALLBACK AboutDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lPar
                 return TRUE;
             }
             if (LOWORD(wParam) == IDC_CREDIT_LINK) {
-                wchar_t name[256] = {0}, url[512] = {0};
-                ParseContributorInfo(CONTRIBUTOR_LINKS[3], name, 256, url, 512);
-                ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOWNORMAL);
+                ShellExecuteW(NULL, L"open", L"https://space.bilibili.com/26087398", NULL, NULL, SW_SHOWNORMAL);
                 return TRUE;
             }
             if (LOWORD(wParam) == IDC_FEEDBACK_LINK) {
-                ShellExecuteW(NULL, L"open", URL_FEEDBACK, NULL, NULL, SW_SHOWNORMAL);
+                extern AppLanguage CURRENT_LANGUAGE;
+                
+                // 根据语言选择不同的反馈链接
+                if (CURRENT_LANGUAGE == APP_LANG_CHINESE_SIMP) {
+                    // 简体中文用户打开bilibili私信
+                    ShellExecuteW(NULL, L"open", URL_FEEDBACK, NULL, NULL, SW_SHOWNORMAL);
+                } else {
+                    // 其他语言用户打开GitHub Issues
+                    ShellExecuteW(NULL, L"open", L"https://github.com/vladelaina/Catime/issues", NULL, NULL, SW_SHOWNORMAL);
+                }
                 return TRUE;
             }
             if (LOWORD(wParam) == IDC_GITHUB_LINK) {
@@ -388,33 +363,21 @@ INT_PTR CALLBACK AboutDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lPar
                 return TRUE;
             }
             if (LOWORD(wParam) == IDC_CREDITS) {
-                ShowCreditsDialog(hwndDlg);
+                ShellExecuteW(NULL, L"open", L"https://vladelaina.github.io/Catime/#thanks", NULL, NULL, SW_SHOWNORMAL);
                 return TRUE;
             }
             if (LOWORD(wParam) == IDC_SUPPORT) {
-                ShowSupportDialog(hwndDlg);
+                ShellExecuteW(NULL, L"open", L"https://vladelaina.github.io/Catime/support.html", NULL, NULL, SW_SHOWNORMAL);
                 return TRUE;
             }
             if (LOWORD(wParam) == IDC_COPYRIGHT_LINK) {
-                ShowLicenseDialog(hwndDlg);
+                ShellExecuteW(NULL, L"open", L"https://github.com/vladelaina/Catime?tab=readme-ov-file#%EF%B8%8F%E7%89%88%E6%9D%83%E5%A3%B0%E6%98%8E", NULL, NULL, SW_SHOWNORMAL);
                 return TRUE;
             }
             break;
 
         case WM_CLOSE:
             // 关闭所有子对话框
-            if (g_hwndCreditsDialog && IsWindow(g_hwndCreditsDialog)) {
-                EndDialog(g_hwndCreditsDialog, 0);
-                g_hwndCreditsDialog = NULL;
-            }
-            if (g_hwndSupportDialog && IsWindow(g_hwndSupportDialog)) {
-                EndDialog(g_hwndSupportDialog, 0);
-                g_hwndSupportDialog = NULL;
-            }
-            if (g_hwndLicenseDialog && IsWindow(g_hwndLicenseDialog)) {
-                EndDialog(g_hwndLicenseDialog, 0);
-                g_hwndLicenseDialog = NULL;
-            }
             EndDialog(hwndDlg, 0);
             g_hwndAboutDlg = NULL;  // 清除对话框句柄
             return TRUE;
@@ -486,317 +449,6 @@ void ShowAboutDialog(HWND hwndParent) {
     }
     
     ShowWindow(g_hwndAboutDlg, SW_SHOW);
-}
-
-// 添加辅助函数来解析贡献者信息
-void ParseContributorInfo(const wchar_t* contributor, wchar_t* name, size_t nameSize, wchar_t* url, size_t urlSize) {
-    const wchar_t *start = wcschr(contributor, L'[');
-    const wchar_t *middle = wcschr(contributor, L']');
-    const wchar_t *urlStart = wcschr(contributor, L'(');
-    const wchar_t *urlEnd = wcschr(contributor, L')');
-    
-    if (start && middle && urlStart && urlEnd) {
-        // 提取名称 (不包含方括号)
-        size_t nameLen = middle - (start + 1);
-        if (nameLen < nameSize) {
-            wcsncpy(name, start + 1, nameLen);
-            name[nameLen] = L'\0';
-        }
-        
-        // 提取URL (不包含圆括号)
-        size_t urlLen = urlEnd - (urlStart + 1);
-        if (urlLen < urlSize) {
-            wcsncpy(url, urlStart + 1, urlLen);
-            url[urlLen] = L'\0';
-        }
-    }
-}
-
-// 修改鸣谢对话框处理过程
-INT_PTR CALLBACK CreditsDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    switch (msg)
-    {
-        case WM_INITDIALOG:
-            return TRUE;
-
-        case WM_COMMAND:
-            // 处理确定按钮
-            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-            {
-                EndDialog(hwndDlg, LOWORD(wParam));
-                return TRUE;
-            }
-            
-            // 处理贡献者链接点击
-            switch (LOWORD(wParam))
-            {
-                case IDC_CREDITS_MAX: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[0], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_XUJILONG: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[1], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_ZGGSONG: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[2], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_NEKO: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[3], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_MOJI: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[4], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_LIKANG: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[5], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_WUMING: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[6], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_FLYING: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[7], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_CAT: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[8], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_RSYQVTHV: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[9], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_HAMSTER: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[10], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_MALOU: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[11], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_VOLCANO: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[12], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_SHEEP: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[13], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_QINGYANG: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[14], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_WILLIAM: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[15], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_WANGYE: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[16], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_FENGZENG: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[17], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_ZHUJIU: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[18], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-                case IDC_CREDITS_TIANCHUN: {
-                    wchar_t name[256] = {0}, url[512] = {0};
-                    ParseContributorInfo(CONTRIBUTOR_LINKS[19], name, 256, url, 512);
-                    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOW);
-                    return TRUE;
-                }
-            }
-            break;
-
-        case WM_CTLCOLORSTATIC:
-        {
-            HDC hdc = (HDC)wParam;
-            HWND hwndCtl = (HWND)lParam;
-            int ctrlId = GetDlgCtrlID(hwndCtl);
-            
-            // 为所有贡献者链接设置橙色
-            if (ctrlId >= IDC_CREDITS_MAX && ctrlId <= IDC_CREDITS_TIANCHUN) {
-                SetTextColor(hdc, 0x00D26919); // 橙色 (BGR格式)
-                SetBkMode(hdc, TRANSPARENT);
-                return (INT_PTR)GetStockObject(NULL_BRUSH);
-            }
-            break;
-        }
-    }
-    return FALSE;
-}
-
-// 显示鸣谢对话框
-void ShowCreditsDialog(HWND hwndParent) {
-    // 如果已经存在鸣谢对话框，先关闭它
-    if (g_hwndCreditsDialog != NULL && IsWindow(g_hwndCreditsDialog)) {
-        EndDialog(g_hwndCreditsDialog, 0);
-        g_hwndCreditsDialog = NULL;
-    }
-    
-    // 创建新的鸣谢对话框
-    g_hwndCreditsDialog = CreateDialog(GetModuleHandle(NULL), 
-                                     MAKEINTRESOURCE(IDD_CREDITS_DIALOG), 
-                                     hwndParent, 
-                                     CreditsDlgProc);
-    ShowWindow(g_hwndCreditsDialog, SW_SHOW);
-}
-
-// 支持对话框处理过程
-INT_PTR CALLBACK SupportDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    static HICON hWechatIcon = NULL;
-    static HICON hAlipayIcon = NULL;
-
-    switch (msg)
-    {
-        case WM_INITDIALOG:
-            // 加载大尺寸的支付图标
-            hWechatIcon = (HICON)LoadImage(GetModuleHandle(NULL),
-                MAKEINTRESOURCE(IDI_WECHAT),
-                IMAGE_ICON,
-                228,    // 宽度
-                228,    // 高度
-                LR_DEFAULTCOLOR);
-            
-            hAlipayIcon = (HICON)LoadImage(GetModuleHandle(NULL),
-                MAKEINTRESOURCE(IDI_ALIPAY),
-                IMAGE_ICON,
-                228,    // 宽度
-                228,    // 高度
-                LR_DEFAULTCOLOR);
-            
-            // 设置图标到Static控件
-            if (hWechatIcon) {
-                SendDlgItemMessage(hwndDlg, IDC_SUPPORT_WECHAT, STM_SETICON, (WPARAM)hWechatIcon, 0);
-            }
-            
-            if (hAlipayIcon) {
-                SendDlgItemMessage(hwndDlg, IDC_SUPPORT_ALIPAY, STM_SETICON, (WPARAM)hAlipayIcon, 0);
-            }
-            
-            return TRUE;
-
-        case WM_DESTROY:
-            // 清理图标资源
-            if (hWechatIcon) {
-                DestroyIcon(hWechatIcon);
-                hWechatIcon = NULL;
-            }
-            if (hAlipayIcon) {
-                DestroyIcon(hAlipayIcon);
-                hAlipayIcon = NULL;
-            }
-            break;
-
-        case WM_COMMAND:
-            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-            {
-                EndDialog(hwndDlg, LOWORD(wParam));
-                g_hwndSupportDialog = NULL;
-                return TRUE;
-            }
-            break;
-    }
-    return FALSE;
-}
-
-// 显示支持对话框
-void ShowSupportDialog(HWND hwndParent) {
-    // 如果已经存在支持对话框，先关闭它
-    if (g_hwndSupportDialog != NULL && IsWindow(g_hwndSupportDialog)) {
-        EndDialog(g_hwndSupportDialog, 0);
-        g_hwndSupportDialog = NULL;
-    }
-    
-    // 创建新的支持对话框
-    g_hwndSupportDialog = CreateDialog(GetModuleHandle(NULL), 
-                                     MAKEINTRESOURCE(IDD_SUPPORT_DIALOG), 
-                                     hwndParent, 
-                                     SupportDlgProc);
-    ShowWindow(g_hwndSupportDialog, SW_SHOW);
-}
-
-// 许可证对话框处理过程
-INT_PTR CALLBACK LicenseDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    switch (msg)
-    {
-        case WM_INITDIALOG:
-            return TRUE;
-
-        case WM_COMMAND:
-            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-            {
-                EndDialog(hwndDlg, LOWORD(wParam));
-                g_hwndLicenseDialog = NULL;
-                return TRUE;
-            }
-            break;
-    }
-    return FALSE;
-}
-
-// 显示许可证对话框
-void ShowLicenseDialog(HWND hwndParent) {
-    // 如果已经存在许可证对话框，先关闭它
-    if (g_hwndLicenseDialog != NULL && IsWindow(g_hwndLicenseDialog)) {
-        EndDialog(g_hwndLicenseDialog, 0);
-        g_hwndLicenseDialog = NULL;
-    }
-    
-    // 创建新的许可证对话框
-    g_hwndLicenseDialog = CreateDialog(GetModuleHandle(NULL), 
-                                     MAKEINTRESOURCE(IDD_LICENSE_DIALOG), 
-                                     hwndParent, 
-                                     LicenseDlgProc);
-    ShowWindow(g_hwndLicenseDialog, SW_SHOW);
 }
 
 // 添加全局变量来跟踪番茄钟循环次数设置对话框句柄
@@ -1038,6 +690,7 @@ INT_PTR CALLBACK WebsiteDialogProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM
                 g_hwndWebsiteDialog = NULL;
                 return TRUE;
             } else if (LOWORD(wParam) == IDCANCEL) {
+                // 用户取消，不更改超时动作
                 EndDialog(hwndDlg, IDCANCEL);
                 g_hwndWebsiteDialog = NULL;
                 return TRUE;
@@ -1075,19 +728,16 @@ INT_PTR CALLBACK WebsiteDialogProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM
 
 // 显示网站URL输入对话框
 void ShowWebsiteDialog(HWND hwndParent) {
-    if (!g_hwndWebsiteDialog) {
-        g_hwndWebsiteDialog = CreateDialog(
-            GetModuleHandle(NULL),
-            MAKEINTRESOURCE(CLOCK_IDD_WEBSITE_DIALOG),
-            hwndParent,
-            WebsiteDialogProc
-        );
-        if (g_hwndWebsiteDialog) {
-            ShowWindow(g_hwndWebsiteDialog, SW_SHOW);
-        }
-    } else {
-        SetForegroundWindow(g_hwndWebsiteDialog);
-    }
+    // 使用模态对话框代替非模态对话框，这样可以知道用户是确认还是取消
+    INT_PTR result = DialogBox(
+        GetModuleHandle(NULL),
+        MAKEINTRESOURCE(CLOCK_IDD_WEBSITE_DIALOG),
+        hwndParent,
+        WebsiteDialogProc
+    );
+    
+    // 只有用户点击确定，且输入有效URL时才会返回IDOK，此时WebsiteDialogProc已设置CLOCK_TIMEOUT_ACTION
+    // 如果用户取消或关闭对话框，不会更改超时动作
 }
 
 // 设置全局变量来跟踪番茄钟组合对话框句柄
@@ -1657,5 +1307,516 @@ void ShowNotificationDisplayDialog(HWND hwndParent) {
                  NotificationDisplayDlgProc);
     } else {
         SetForegroundWindow(g_hwndNotificationDisplayDialog);
+    }
+}
+
+// 添加全局变量来跟踪整合后的通知设置对话框句柄
+static HWND g_hwndNotificationSettingsDialog = NULL;
+
+/**
+ * @brief 音频播放完成回调函数
+ * @param hwnd 窗口句柄
+ * 
+ * 当音频播放完成时，将"结束"按钮变回"测试"按钮
+ */
+static void OnAudioPlaybackComplete(HWND hwnd) {
+    if (hwnd && IsWindow(hwnd)) {
+        SetDlgItemTextW(hwnd, IDC_TEST_SOUND_BUTTON, L"测试");
+        
+        // 获取对话框数据
+        HWND hwndTestButton = GetDlgItem(hwnd, IDC_TEST_SOUND_BUTTON);
+        
+        // 发送WM_SETTEXT消息更新按钮文本
+        if (hwndTestButton && IsWindow(hwndTestButton)) {
+            SendMessageW(hwndTestButton, WM_SETTEXT, 0, (LPARAM)L"测试");
+        }
+        
+        // 更新全局播放状态
+        if (g_hwndNotificationSettingsDialog == hwnd) {
+            // 发送消息给对话框，通知播放状态变更
+            SendMessage(hwnd, WM_APP + 100, 0, 0);
+        }
+    }
+}
+
+/**
+ * @brief 填充音频下拉框
+ * @param hwndDlg 对话框句柄
+ */
+static void PopulateSoundComboBox(HWND hwndDlg) {
+    HWND hwndCombo = GetDlgItem(hwndDlg, IDC_NOTIFICATION_SOUND_COMBO);
+    if (!hwndCombo) return;
+
+    // 清空下拉框
+    SendMessage(hwndCombo, CB_RESETCONTENT, 0, 0);
+
+    // 添加"无"选项
+    SendMessageW(hwndCombo, CB_ADDSTRING, 0, (LPARAM)L"无");
+    
+    // 添加"系统提示音"选项
+    SendMessageW(hwndCombo, CB_ADDSTRING, 0, (LPARAM)L"系统提示音");
+
+    // 获取音频文件夹路径
+    char audio_path[MAX_PATH];
+    GetAudioFolderPath(audio_path, MAX_PATH);
+    
+    // 转换为宽字符路径
+    wchar_t wAudioPath[MAX_PATH];
+    MultiByteToWideChar(CP_UTF8, 0, audio_path, -1, wAudioPath, MAX_PATH);
+
+    // 构建搜索路径
+    wchar_t wSearchPath[MAX_PATH];
+    swprintf(wSearchPath, MAX_PATH, L"%s\\*.*", wAudioPath);
+
+    // 查找音频文件 - 使用Unicode版本的API
+    WIN32_FIND_DATAW find_data;
+    HANDLE hFind = FindFirstFileW(wSearchPath, &find_data);
+    if (hFind != INVALID_HANDLE_VALUE) {
+        do {
+            // 检查文件扩展名
+            wchar_t* ext = wcsrchr(find_data.cFileName, L'.');
+            if (ext && (
+                _wcsicmp(ext, L".flac") == 0 ||
+                _wcsicmp(ext, L".mp3") == 0 ||
+                _wcsicmp(ext, L".wav") == 0
+            )) {
+                // 直接添加Unicode文件名到下拉框
+                SendMessageW(hwndCombo, CB_ADDSTRING, 0, (LPARAM)find_data.cFileName);
+            }
+        } while (FindNextFileW(hFind, &find_data));
+        FindClose(hFind);
+    }
+
+    // 设置当前选中的音频文件
+    if (NOTIFICATION_SOUND_FILE[0] != '\0') {
+        // 检查是否是系统提示音特殊标记
+        if (strcmp(NOTIFICATION_SOUND_FILE, "SYSTEM_BEEP") == 0) {
+            // 选择"系统提示音"选项（索引为1）
+            SendMessage(hwndCombo, CB_SETCURSEL, 1, 0);
+        } else {
+            wchar_t wSoundFile[MAX_PATH];
+            MultiByteToWideChar(CP_UTF8, 0, NOTIFICATION_SOUND_FILE, -1, wSoundFile, MAX_PATH);
+            
+            // 获取文件名部分
+            wchar_t* fileName = wcsrchr(wSoundFile, L'\\');
+            if (fileName) fileName++;
+            else fileName = wSoundFile;
+            
+            // 在下拉框中查找并选择该文件
+            int index = SendMessageW(hwndCombo, CB_FINDSTRINGEXACT, -1, (LPARAM)fileName);
+            if (index != CB_ERR) {
+                SendMessage(hwndCombo, CB_SETCURSEL, index, 0);
+            } else {
+                SendMessage(hwndCombo, CB_SETCURSEL, 0, 0); // 选择"无"
+            }
+        }
+    } else {
+        SendMessage(hwndCombo, CB_SETCURSEL, 0, 0); // 选择"无"
+    }
+}
+
+/**
+ * @brief 整合后的通知设置对话框处理程序
+ * @param hwndDlg 对话框句柄
+ * @param msg 消息类型
+ * @param wParam 消息参数
+ * @param lParam 消息参数
+ * @return INT_PTR 消息处理结果
+ * 
+ * 整合了通知内容和通知显示的统一设置界面
+ */
+INT_PTR CALLBACK NotificationSettingsDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+    static BOOL isPlaying = FALSE; // 添加一个静态变量来跟踪播放状态
+    static int originalVolume = 0; // 添加一个静态变量保存原始音量
+    
+    switch (msg) {
+        case WM_INITDIALOG: {
+            // 读取最新配置到全局变量
+            ReadNotificationMessagesConfig();
+            ReadNotificationTimeoutConfig();
+            ReadNotificationOpacityConfig();
+            ReadNotificationTypeConfig();
+            ReadNotificationSoundConfig();
+            ReadNotificationVolumeConfig();
+            
+            // 保存原始音量值，用于取消操作时恢复
+            originalVolume = NOTIFICATION_SOUND_VOLUME;
+            
+            // 设置通知消息文本 - 使用Unicode函数
+            wchar_t wideText[256];
+            
+            // 第一个编辑框 - 倒计时超时提示
+            MultiByteToWideChar(CP_UTF8, 0, CLOCK_TIMEOUT_MESSAGE_TEXT, -1, 
+                               wideText, sizeof(wideText)/sizeof(wchar_t));
+            SetDlgItemTextW(hwndDlg, IDC_NOTIFICATION_EDIT1, wideText);
+            
+            // 第二个编辑框 - 番茄钟超时提示
+            MultiByteToWideChar(CP_UTF8, 0, POMODORO_TIMEOUT_MESSAGE_TEXT, -1, 
+                               wideText, sizeof(wideText)/sizeof(wchar_t));
+            SetDlgItemTextW(hwndDlg, IDC_NOTIFICATION_EDIT2, wideText);
+            
+            // 第三个编辑框 - 番茄钟循环完成提示
+            MultiByteToWideChar(CP_UTF8, 0, POMODORO_CYCLE_COMPLETE_TEXT, -1, 
+                               wideText, sizeof(wideText)/sizeof(wchar_t));
+            SetDlgItemTextW(hwndDlg, IDC_NOTIFICATION_EDIT3, wideText);
+            
+            // 设置通知显示时间
+            wchar_t timeout_str[32];
+            swprintf(timeout_str, sizeof(timeout_str)/sizeof(wchar_t), L"%d", NOTIFICATION_TIMEOUT_MS / 1000);
+            SetDlgItemTextW(hwndDlg, IDC_NOTIFICATION_TIME_EDIT, timeout_str);
+            
+            // 设置通知透明度
+            wchar_t opacity_str[32];
+            swprintf(opacity_str, sizeof(opacity_str)/sizeof(wchar_t), L"%d", NOTIFICATION_MAX_OPACITY);
+            SetDlgItemTextW(hwndDlg, IDC_NOTIFICATION_OPACITY_EDIT, opacity_str);
+            
+            // 设置通知类型单选按钮
+            switch (NOTIFICATION_TYPE) {
+                case NOTIFICATION_TYPE_CATIME:
+                    CheckDlgButton(hwndDlg, IDC_NOTIFICATION_TYPE_CATIME, BST_CHECKED);
+                    break;
+                case NOTIFICATION_TYPE_OS:
+                    CheckDlgButton(hwndDlg, IDC_NOTIFICATION_TYPE_OS, BST_CHECKED);
+                    break;
+                case NOTIFICATION_TYPE_SYSTEM_MODAL:
+                    CheckDlgButton(hwndDlg, IDC_NOTIFICATION_TYPE_SYSTEM_MODAL, BST_CHECKED);
+                    break;
+            }
+            
+            // 填充音频下拉框
+            PopulateSoundComboBox(hwndDlg);
+            
+            // 设置音量滑块
+            HWND hwndSlider = GetDlgItem(hwndDlg, IDC_VOLUME_SLIDER);
+            SendMessage(hwndSlider, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
+            SendMessage(hwndSlider, TBM_SETPOS, TRUE, NOTIFICATION_SOUND_VOLUME);
+            
+            // 更新音量文本
+            wchar_t volumeText[16];
+            swprintf(volumeText, sizeof(volumeText)/sizeof(wchar_t), L"%d%%", NOTIFICATION_SOUND_VOLUME);
+            SetDlgItemTextW(hwndDlg, IDC_VOLUME_TEXT, volumeText);
+            
+            // 在初始化时重置播放状态
+            isPlaying = FALSE;
+            
+            // 设置音频播放完成回调函数
+            SetAudioPlaybackCompleteCallback(hwndDlg, OnAudioPlaybackComplete);
+            
+            // 保存对话框句柄
+            g_hwndNotificationSettingsDialog = hwndDlg;
+            
+            return TRUE;
+        }
+        
+        case WM_HSCROLL: {
+            // 处理音量滑块拖动事件
+            if (GetDlgItem(hwndDlg, IDC_VOLUME_SLIDER) == (HWND)lParam) {
+                // 获取滑块当前位置
+                int volume = (int)SendMessage((HWND)lParam, TBM_GETPOS, 0, 0);
+                
+                // 更新音量百分比文本
+                wchar_t volumeText[16];
+                swprintf(volumeText, sizeof(volumeText)/sizeof(wchar_t), L"%d%%", volume);
+                SetDlgItemTextW(hwndDlg, IDC_VOLUME_TEXT, volumeText);
+                
+                // 实时应用音量设置 - 无论是否有音频正在播放都应用设置
+                // 这样在其他地方播放的通知声音也能使用当前滑块设置的音量
+                SetAudioVolume(volume);
+                
+                return TRUE;
+            }
+            break;
+        }
+        
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDOK) {
+                // 获取通知消息文本 - 使用Unicode函数
+                wchar_t wTimeout[256] = {0};
+                wchar_t wPomodoro[256] = {0};
+                wchar_t wCycle[256] = {0};
+                
+                // 获取Unicode文本
+                GetDlgItemTextW(hwndDlg, IDC_NOTIFICATION_EDIT1, wTimeout, sizeof(wTimeout)/sizeof(wchar_t));
+                GetDlgItemTextW(hwndDlg, IDC_NOTIFICATION_EDIT2, wPomodoro, sizeof(wPomodoro)/sizeof(wchar_t));
+                GetDlgItemTextW(hwndDlg, IDC_NOTIFICATION_EDIT3, wCycle, sizeof(wCycle)/sizeof(wchar_t));
+                
+                // 转换为UTF-8
+                char timeout_msg[256] = {0};
+                char pomodoro_msg[256] = {0};
+                char cycle_complete_msg[256] = {0};
+                
+                WideCharToMultiByte(CP_UTF8, 0, wTimeout, -1, 
+                                    timeout_msg, sizeof(timeout_msg), NULL, NULL);
+                WideCharToMultiByte(CP_UTF8, 0, wPomodoro, -1, 
+                                    pomodoro_msg, sizeof(pomodoro_msg), NULL, NULL);
+                WideCharToMultiByte(CP_UTF8, 0, wCycle, -1, 
+                                    cycle_complete_msg, sizeof(cycle_complete_msg), NULL, NULL);
+                
+                // 获取通知显示时间
+                wchar_t wTimeStr[32] = {0};
+                GetDlgItemTextW(hwndDlg, IDC_NOTIFICATION_TIME_EDIT, wTimeStr, sizeof(wTimeStr)/sizeof(wchar_t));
+                int timeout = _wtoi(wTimeStr);
+                if (timeout > 0) {
+                    NOTIFICATION_TIMEOUT_MS = timeout * 1000;
+                }
+                
+                // 获取通知透明度
+                wchar_t wOpacityStr[32] = {0};
+                GetDlgItemTextW(hwndDlg, IDC_NOTIFICATION_OPACITY_EDIT, wOpacityStr, sizeof(wOpacityStr)/sizeof(wchar_t));
+                int opacity = _wtoi(wOpacityStr);
+                if (opacity >= 1 && opacity <= 100) {
+                    NOTIFICATION_MAX_OPACITY = opacity;
+                }
+                
+                // 获取通知类型
+                if (IsDlgButtonChecked(hwndDlg, IDC_NOTIFICATION_TYPE_CATIME)) {
+                    NOTIFICATION_TYPE = NOTIFICATION_TYPE_CATIME;
+                } else if (IsDlgButtonChecked(hwndDlg, IDC_NOTIFICATION_TYPE_OS)) {
+                    NOTIFICATION_TYPE = NOTIFICATION_TYPE_OS;
+                } else if (IsDlgButtonChecked(hwndDlg, IDC_NOTIFICATION_TYPE_SYSTEM_MODAL)) {
+                    NOTIFICATION_TYPE = NOTIFICATION_TYPE_SYSTEM_MODAL;
+                }
+                
+                // 获取选中的音频文件
+                HWND hwndCombo = GetDlgItem(hwndDlg, IDC_NOTIFICATION_SOUND_COMBO);
+                int index = SendMessage(hwndCombo, CB_GETCURSEL, 0, 0);
+                if (index > 0) { // 0是"无"选项
+                    wchar_t wFileName[MAX_PATH];
+                    SendMessageW(hwndCombo, CB_GETLBTEXT, index, (LPARAM)wFileName);
+                    
+                    // 检查是否选择了"系统提示音"
+                    if (wcscmp(wFileName, L"系统提示音") == 0) {
+                        // 使用特殊标记来表示系统提示音
+                        strcpy(NOTIFICATION_SOUND_FILE, "SYSTEM_BEEP");
+                    } else {
+                        // 获取音频文件夹路径
+                        char audio_path[MAX_PATH];
+                        GetAudioFolderPath(audio_path, MAX_PATH);
+                        
+                        // 转换为UTF-8路径
+                        char fileName[MAX_PATH];
+                        WideCharToMultiByte(CP_UTF8, 0, wFileName, -1, fileName, MAX_PATH, NULL, NULL);
+                        
+                        // 构建完整的文件路径
+                        memset(NOTIFICATION_SOUND_FILE, 0, MAX_PATH);
+                        snprintf(NOTIFICATION_SOUND_FILE, MAX_PATH, "%s\\%s", audio_path, fileName);
+                    }
+                } else {
+                    NOTIFICATION_SOUND_FILE[0] = '\0';
+                }
+                
+                // 获取音量滑块位置
+                HWND hwndSlider = GetDlgItem(hwndDlg, IDC_VOLUME_SLIDER);
+                int volume = (int)SendMessage(hwndSlider, TBM_GETPOS, 0, 0);
+                NOTIFICATION_SOUND_VOLUME = volume;
+                
+                // 保存所有设置
+                WriteConfigNotificationMessages(
+                    timeout_msg,
+                    pomodoro_msg,
+                    cycle_complete_msg
+                );
+                WriteConfigNotificationTimeout(NOTIFICATION_TIMEOUT_MS);
+                WriteConfigNotificationOpacity(NOTIFICATION_MAX_OPACITY);
+                WriteConfigNotificationType(NOTIFICATION_TYPE);
+                WriteConfigNotificationSound(NOTIFICATION_SOUND_FILE);
+                WriteConfigNotificationVolume(NOTIFICATION_SOUND_VOLUME);
+                
+                // 确保停止正在播放的音频
+                if (isPlaying) {
+                    StopNotificationSound();
+                    isPlaying = FALSE;
+                }
+                
+                // 关闭对话框前清理回调
+                SetAudioPlaybackCompleteCallback(NULL, NULL);
+                
+                EndDialog(hwndDlg, IDOK);
+                g_hwndNotificationSettingsDialog = NULL;
+                return TRUE;
+            } else if (LOWORD(wParam) == IDCANCEL) {
+                // 确保停止正在播放的音频
+                if (isPlaying) {
+                    StopNotificationSound();
+                    isPlaying = FALSE;
+                }
+                
+                // 恢复原始音量设置
+                NOTIFICATION_SOUND_VOLUME = originalVolume;
+                
+                // 重新应用原始音量
+                SetAudioVolume(originalVolume);
+                
+                // 关闭对话框前清理回调
+                SetAudioPlaybackCompleteCallback(NULL, NULL);
+                
+                EndDialog(hwndDlg, IDCANCEL);
+                g_hwndNotificationSettingsDialog = NULL;
+                return TRUE;
+            } else if (LOWORD(wParam) == IDC_TEST_SOUND_BUTTON) {
+                if (!isPlaying) {
+                    // 当前不在播放，开始播放并更改按钮文本为"结束"
+                    HWND hwndCombo = GetDlgItem(hwndDlg, IDC_NOTIFICATION_SOUND_COMBO);
+                    int index = SendMessage(hwndCombo, CB_GETCURSEL, 0, 0);
+                    
+                    if (index > 0) { // 0是"无"选项
+                        // 获取当前滑块音量并应用
+                        HWND hwndSlider = GetDlgItem(hwndDlg, IDC_VOLUME_SLIDER);
+                        int volume = (int)SendMessage(hwndSlider, TBM_GETPOS, 0, 0);
+                        SetAudioVolume(volume);
+                        
+                        wchar_t wFileName[MAX_PATH];
+                        SendMessageW(hwndCombo, CB_GETLBTEXT, index, (LPARAM)wFileName);
+                        
+                        // 临时保存当前音频设置
+                        char tempSoundFile[MAX_PATH];
+                        strcpy(tempSoundFile, NOTIFICATION_SOUND_FILE);
+                        
+                        // 临时设置音频文件
+                        if (wcscmp(wFileName, L"系统提示音") == 0) {
+                            // 使用特殊标记
+                            strcpy(NOTIFICATION_SOUND_FILE, "SYSTEM_BEEP");
+                        } else {
+                            // 获取音频文件夹路径
+                            char audio_path[MAX_PATH];
+                            GetAudioFolderPath(audio_path, MAX_PATH);
+                            
+                            // 转换为UTF-8路径
+                            char fileName[MAX_PATH];
+                            WideCharToMultiByte(CP_UTF8, 0, wFileName, -1, fileName, MAX_PATH, NULL, NULL);
+                            
+                            // 构建完整的文件路径
+                            memset(NOTIFICATION_SOUND_FILE, 0, MAX_PATH);
+                            snprintf(NOTIFICATION_SOUND_FILE, MAX_PATH, "%s\\%s", audio_path, fileName);
+                        }
+                        
+                        // 播放音频
+                        if (PlayNotificationSound(hwndDlg)) {
+                            // 播放成功，更改按钮文本为"结束"
+                            SetDlgItemTextW(hwndDlg, IDC_TEST_SOUND_BUTTON, L"结束");
+                            isPlaying = TRUE;
+                        }
+                        
+                        // 恢复之前的设置
+                        strcpy(NOTIFICATION_SOUND_FILE, tempSoundFile);
+                    }
+                } else {
+                    // 当前正在播放，停止播放并恢复按钮文本
+                    StopNotificationSound();
+                    SetDlgItemTextW(hwndDlg, IDC_TEST_SOUND_BUTTON, L"测试");
+                    isPlaying = FALSE;
+                }
+                return TRUE;
+            } else if (LOWORD(wParam) == IDC_OPEN_SOUND_DIR_BUTTON) {
+                // 获取音频目录路径
+                char audio_path[MAX_PATH];
+                GetAudioFolderPath(audio_path, MAX_PATH);
+                
+                // 确保目录存在
+                wchar_t wAudioPath[MAX_PATH];
+                MultiByteToWideChar(CP_UTF8, 0, audio_path, -1, wAudioPath, MAX_PATH);
+                
+                // 打开目录
+                ShellExecuteW(hwndDlg, L"open", wAudioPath, NULL, NULL, SW_SHOWNORMAL);
+                
+                // 记录当前选择的音频文件
+                HWND hwndCombo = GetDlgItem(hwndDlg, IDC_NOTIFICATION_SOUND_COMBO);
+                int selectedIndex = SendMessage(hwndCombo, CB_GETCURSEL, 0, 0);
+                wchar_t selectedFile[MAX_PATH] = {0};
+                if (selectedIndex > 0) {
+                    SendMessageW(hwndCombo, CB_GETLBTEXT, selectedIndex, (LPARAM)selectedFile);
+                }
+                
+                // 重新填充音频下拉框
+                PopulateSoundComboBox(hwndDlg);
+                
+                // 尝试恢复之前的选择
+                if (selectedFile[0] != L'\0') {
+                    int newIndex = SendMessageW(hwndCombo, CB_FINDSTRINGEXACT, -1, (LPARAM)selectedFile);
+                    if (newIndex != CB_ERR) {
+                        SendMessage(hwndCombo, CB_SETCURSEL, newIndex, 0);
+                    } else {
+                        // 如果找不到之前的选择，默认选择"无"
+                        SendMessage(hwndCombo, CB_SETCURSEL, 0, 0);
+                    }
+                }
+                
+                return TRUE;
+            } else if (LOWORD(wParam) == IDC_NOTIFICATION_SOUND_COMBO && HIWORD(wParam) == CBN_DROPDOWN) {
+                // 下拉列表将要打开时，重新加载文件列表
+                HWND hwndCombo = GetDlgItem(hwndDlg, IDC_NOTIFICATION_SOUND_COMBO);
+                
+                // 记录当前选择的文件
+                int selectedIndex = SendMessage(hwndCombo, CB_GETCURSEL, 0, 0);
+                wchar_t selectedFile[MAX_PATH] = {0};
+                if (selectedIndex > 0) {
+                    SendMessageW(hwndCombo, CB_GETLBTEXT, selectedIndex, (LPARAM)selectedFile);
+                }
+                
+                // 重新填充下拉框
+                PopulateSoundComboBox(hwndDlg);
+                
+                // 恢复之前的选择
+                if (selectedFile[0] != L'\0') {
+                    int newIndex = SendMessageW(hwndCombo, CB_FINDSTRINGEXACT, -1, (LPARAM)selectedFile);
+                    if (newIndex != CB_ERR) {
+                        SendMessage(hwndCombo, CB_SETCURSEL, newIndex, 0);
+                    }
+                }
+                
+                return TRUE;
+            }
+            break;
+            
+        // 添加自定义消息处理，用于音频播放完成通知
+        case WM_APP + 100:
+            // 音频播放已完成，更新按钮状态
+            isPlaying = FALSE;
+            return TRUE;
+            
+        case WM_CLOSE:
+            // 关闭对话框时确保停止播放
+            if (isPlaying) {
+                StopNotificationSound();
+            }
+            
+            // 清理回调
+            SetAudioPlaybackCompleteCallback(NULL, NULL);
+            
+            EndDialog(hwndDlg, IDCANCEL);
+            g_hwndNotificationSettingsDialog = NULL;
+            return TRUE;
+            
+        case WM_DESTROY:
+            // 对话框销毁时清理回调
+            SetAudioPlaybackCompleteCallback(NULL, NULL);
+            g_hwndNotificationSettingsDialog = NULL;
+            break;
+    }
+    return FALSE;
+}
+
+/**
+ * @brief 显示整合后的通知设置对话框
+ * @param hwndParent 父窗口句柄
+ * 
+ * 显示同时包含通知内容和通知显示设置的整合对话框
+ */
+void ShowNotificationSettingsDialog(HWND hwndParent) {
+    if (!g_hwndNotificationSettingsDialog) {
+        // 确保首先读取最新的配置值
+        ReadNotificationMessagesConfig();
+        ReadNotificationTimeoutConfig();
+        ReadNotificationOpacityConfig();
+        ReadNotificationTypeConfig();
+        ReadNotificationSoundConfig();
+        ReadNotificationVolumeConfig();
+        
+        DialogBox(GetModuleHandle(NULL), 
+                 MAKEINTRESOURCE(CLOCK_IDD_NOTIFICATION_SETTINGS_DIALOG), 
+                 hwndParent, 
+                 NotificationSettingsDlgProc);
+    } else {
+        SetForegroundWindow(g_hwndNotificationSettingsDialog);
     }
 }

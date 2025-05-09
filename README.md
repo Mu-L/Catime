@@ -11,7 +11,7 @@
   <a href="https://discord.com/invite/W3tW2gtp6g" target="_blank">
     <img src="https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white&style=for-the-badge" alt="Join Discord" />
   </a>
-  <a href="https://catime.vladelaina.com/support" target="_blank">
+  <a href="https://vladelaina.github.io/Catime/support" target="_blank">
     <img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-Support%20-critical?logo=buymeacoffee&logoColor=white&style=for-the-badge" alt="Buy me a coffee" />
   </a>
 
@@ -26,10 +26,11 @@
   <a href="https://github.com/vladelaina/Catime/releases">
     <img alt="Downloads" src="https://img.shields.io/github/downloads/vladelaina/Catime/total?label=Downloads&style=for-the-badge&color=orange" />
   </a>
-  <a href="https://github.com/users/vladelaina/projects/2" target="_blank">
-    <img src="https://img.shields.io/badge/To%20Do-12%25%20Complete-00C853?style=for-the-badge&logo=todoist&logoColor=white" alt="To-Do" />
+  <a href="https://github.com/vladelaina/Catime/releases" target="_blank">
+    <img src="https://img.shields.io/badge/Software%20Size-232%20KB-blue?logo=appveyor&logoColor=white&style=for-the-badge" alt="Software Size" />
   </a>
 </p>
+
 
 
 
@@ -38,7 +39,7 @@
 <h1 align="center">Catime</h1>
 
 <div align="center">
-<a href="https://hellogithub.com/repository/00a7a32b7bc647e1a62747530bc16115" target="_blank"><img src="https://api.hellogithub.com/v1/widgets/recommend.svg?rid=00a7a32b7bc647e1a62747530bc16115&claim_uid=JBczix10rXqNblQ&theme=neutral" alt="Featured｜HelloGitHub" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+<a href="https://hellogithub.com/repository/00a7a32b7bc647e1a62747530bc16115" target="_blank"><img src="https://api.hellogithub.com/v1/widgets/recommend.svg?rid=00a7a32b7bc647e1a62747530bc16115&claim_uid=JBczix10rXqNblQ" alt="Featured｜HelloGitHub" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 </div>
 
 <p align="center">一款简洁的 Windows 倒计时工具，支持番茄时钟功能，具有透明界面和丰富的自定义选项。</p>
@@ -50,14 +51,14 @@
 
 **简体中文** | [**English**](./README_EN.md)
 
-## [🌟特点](https://catime.vladelaina.com/#core-features)
+## [🌟特点](https://vladelaina.github.io/Catime/#core-features)
 
 - **极简设计**: 透明界面、点击穿透、随意拖拽和缩放、没有繁琐的图形化设置界面，不会让人有直观上多开一个软件的感觉
 - **灵活计时**: 快速预设、自定义时间输入、显示当前时间(12/24小时制)、倒计时、正计时、番茄时钟
 - **超时动作**: 显示消息、显示当前时间、正计时、锁定屏幕、打开文件/软件、打开网站、关机、重启
 - **自定义丰富**: 47种字体、15种预设颜色、支持输入颜色值、使用调色板选择颜色、支持实时预览
 
-## [💡使用场景](https://catime.vladelaina.com/#use-cases)
+## [💡使用场景](https://vladelaina.github.io/Catime/#use-cases)
 
 - 👔 下班倒计时
 - 🍅 番茄时钟
@@ -74,7 +75,7 @@
 
  演示视频(基于V1.0.5)：<img src="https://www.bilibili.com/favicon.ico" width="20" height="20"> [BiliBili](https://www.bilibili.com/video/BV1AsoKYgE3r/)
 
-## [📑使用指南](https://catime.vladelaina.com/guide)
+## [📑使用指南](https://vladelaina.github.io/Catime/guide)
 
 - **左键点击托盘图标**: 设置**时间**
 - **右键点击托盘图标**: 设置**菜单**
@@ -92,7 +93,7 @@
 </a>
 
 
-## [✨鸣谢](https://catime.vladelaina.com/#thanks) 
+## [✨鸣谢](https://vladelaina.github.io/Catime/#thanks) 
 
 特别感谢以下贡献者：
 <table>
@@ -125,7 +126,7 @@
         <a href="https://space.bilibili.com/1708573954"><img src="https://i1.hdslb.com/bfs/face/7fe7cfba25dd086f9b4dbb8433b5db237a5ff98b.jpg@240w_240h_1c_1s_!web-avatar-space-header.avif" width="100px;" alt="我是无名吖"/><br /><sub><b>我是无名吖</b></sub></a><br />
       </td>
       <td align="center" valign="top" width="14.28%">
-        <a href="https://github.com/flying-hilichurl"><img src="https://avatars.githubusercontent.com/u/187168840?v=4" width="100px;" alt="flying-hilichurl"/><br /><sub><b>flying-hilichurl</b></sub></a><br />
+        <a href="https://github.com/flying-hilichurl"><img src="https://github.com/user-attachments/assets/e83d0c15-cfe1-46d0-9904-c4dfda7baf0a" width="100px;" alt="金麟"/><br /><sub><b>金麟</b></sub></a><br />
       </td>
       <td align="center" valign="top" width="14.28%">
         <a href="https://space.bilibili.com/161061562"><img src="https://i1.hdslb.com/bfs/face/ffbffc12d4cb51d158210f26f45bb1b369eaf730.jpg@240w_240h_1c_1s_!web-avatar-space-header.avif" width="100px;" alt="双脚猫"/><br /><sub><b>双脚猫</b></sub></a><br />
@@ -134,7 +135,7 @@
         <a href="https://github.com/rsyqvthv"><img src="https://avatars.githubusercontent.com/u/2230369?v=4" width="100px;" alt="rsyqvthv"/><br /><sub><b>rsyqvthv</b></sub></a><br />
       </td>
       <td align="center" valign="top" width="14.28%">
-        <a href="https://space.bilibili.com/297146893"><img src="https://i1.hdslb.com/bfs/face/60bd4649e39b9324998c0fede4dbc18a5baa7311.jpg@240w_240h_1c_1s_!web-avatar-space-header.avif" width="100px;" alt="洋仓鼠"/><br /><sub><b>洋仓鼠</b></sub></a><br />
+        <a href="https://space.bilibili.com/297146893"><img src="https://github.com/user-attachments/assets/9b6a9293-c0f7-4c03-a101-eff670dd0154" width="100px;" alt="君影"/><br /><sub><b>君影</b></sub></a><br />
       </td>
       <td align="center" valign="top" width="14.28%">
         <a href="https://space.bilibili.com/3546380188519387"><img src="https://i1.hdslb.com/bfs/face/a6396d677f543a173aa11f3d3cd2943a96121dda.jpg@240w_240h_1c_1s_!web-avatar-space-header.avif" width="100px;" alt="学习马楼"/><br /><sub><b>学习马楼</b></sub></a><br />
@@ -173,9 +174,30 @@
       <td align="center" valign="top" width="14.28%">
         <a href="https://github.com/xxtui-main/xxtui"><img src="https://avatars.githubusercontent.com/u/31737411?v=4" width="100px;" alt="x.j"/><br /><sub><b>x.j</b></sub></a><br />
       </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/kissholic"><img src="https://avatars.githubusercontent.com/u/26087790?v=4" width="100px;" alt="kissholic"/><br /><sub><b>kissholic</b></sub></a><br />
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href=""><img src="https://github.com/user-attachments/assets/ef1ff137-7430-420c-8142-562a48803f56" width="100px;" alt="Alnilam"/><br /><sub><b>Alnilam</b></sub></a><br />
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/pyqmlp"><img src="https://github.com/user-attachments/assets/fb0473e9-db9d-4f63-ac8d-4aa1d9ee7579" width="100px;" alt="柒"/><br /><sub><b>柒</b></sub></a><br />
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/Mapaler"><img src="https://avatars.githubusercontent.com/u/6565860?v=4" width="100px;" alt="枫谷剑仙"/><br /><sub><b>枫谷剑仙</b></sub></a><br />
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/Crazy-A2"><img src="https://avatars.githubusercontent.com/u/68056912?v=4" width="100px;" alt="Marial"/><br /><sub><b>Marial</b></sub></a><br />
+      </td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://space.bilibili.com/507572706"><img src="https://github.com/user-attachments/assets/8bf7a9e8-749a-47b6-976c-6798bacea6d2" width="100px;" alt="卓越方达"/><br /><sub><b>卓越方达</b></sub></a><br />
+      </td>
+    </tr>  
   </tbody>
 </table>
+
 
 
 ## 🗝️版权声明
@@ -203,7 +225,7 @@
     Mystery Quest Essence.ttf, Noto Nastaliq Urdu Medium Essence.ttf, Piedra Essence.ttf,
     Pixelify Sans Medium Essence.ttf, Press Start 2P Essence.ttf,
     Rubik Bubbles Essence.ttf, Rubik Burned Essence.ttf, Rubik Glitch Essence.ttf,
-    Rubik Glitch Pop Essence.ttf, Rubik Marker Hatch Essence.ttf,
+    Rubik Marker Hatch Essence.ttf,
     Rubik Puddles Essence.ttf, Rubik Vinyl Essence.ttf, Rubik Wet Paint Essence.ttf,
     Ruge Boogie Essence.ttf, Sevillana Essence.ttf, Silkscreen Essence.ttf,
     Stick Essence.ttf, Underdog Essence.ttf, Wallpoet Essence.ttf,

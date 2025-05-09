@@ -1,32 +1,55 @@
 /* 版本与更新信息 */
-#define CATIME_VERSION "1.0.6-alpha2"
+#define CATIME_VERSION "1.0.8-alpha1"
 
-/* 鸣谢链接  猫屋敷梨梨Official*/
-#define CREDIT_LINK_URL       "https://space.bilibili.com/26087398"
+/* 鸣谢链接 */
+#define CREDIT_LINK_URL L"https://space.bilibili.com/26087398"
 
-// 关于对话框图标尺寸
-#define ABOUT_ICON_SIZE 200
+/*==================================
+ * 系统常量定义
+ *==================================*/
+#define CSIDL_STARTUP 0x0007
+#define MAX_RECENT_FILES 5
+#define MAX_TIME_OPTIONS 10
+#define MIN_SCALE_FACTOR 0.5f
+#define MAX_SCALE_FACTOR 100.0f
+#define CLOCK_WM_TRAYICON (WM_USER + 2)
+#define MAX_POMODORO_TIMES 10  // 番茄钟时间数组的最大容量
 
-// 关于对话框文本
-#define IDC_ABOUT_TITLE L"Catime"
-#define IDC_ABOUT_VERSION L"当前版本: "
-#define IDC_COPYRIGHT_TEXT L"Copyright (C) 2025 By vladelaina"
-
-/* 窗口尺寸增长量 */
-#define WINDOW_HORIZONTAL_PADDING 190  //左右
-#define WINDOW_VERTICAL_PADDING -5     //上下
+/* 窗口尺寸常量 */
+#define WINDOW_HORIZONTAL_PADDING 190 // 左右
+#define WINDOW_VERTICAL_PADDING -5    // 上下
 
 /* 系统按键定义 */
 #define VK_MEDIA_PLAY_PAUSE 0xB3
 #define VK_MEDIA_STOP 0xB2
 #define KEYEVENTF_KEYUP 0x0002
 
-/* 主对话框与核心控件 */
+/* 视觉效果常量 */
+#define BLUR_OPACITY 192
+#define BLUR_TRANSITION_MS 200
+
+/* 外部链接 */
+#define URL_GITHUB_REPO L"https://github.com/vladelaina/Catime"
+#define URL_FEEDBACK L"https://message.bilibili.com/#/whisper/mid1862395225"
+
+/*==================================
+ * 主要图标与应用ID (100-199)
+ *==================================*/
 #define IDI_CATIME 101
+
+/*==================================
+ * 核心对话框与基础控件 (1000-1099)
+ *==================================*/
 #define CLOCK_ID_TRAY_APP_ICON 1001
 #define CLOCK_IDD_DIALOG1 1002
 #define CLOCK_IDD_COLOR_DIALOG 1003
 #define IDD_INPUTBOX 1004
+#define IDD_STARTUP_TIME_DIALOG 1005
+#define CLOCK_IDD_SHORTCUT_DIALOG 1006
+#define CLOCK_IDD_STARTUP_DIALOG 1007
+#define CLOCK_IDD_WEBSITE_DIALOG 1008
+
+#define CLOCK_IDC_STATIC 1001
 #define IDC_STATIC_PROMPT 1005
 #define IDC_EDIT_INPUT 1006
 #define CLOCK_IDC_EDIT 108
@@ -34,11 +57,219 @@
 #define CLOCK_IDC_CUSTOMIZE_LEFT 112
 #define CLOCK_IDC_EDIT_MODE 113
 #define CLOCK_IDC_MODIFY_OPTIONS 114
-#define CLOCK_IDC_STATIC 1001
 
-/* 字体配置 */
-// 字体菜单项
+/*==================================
+ * 主菜单功能项 (120-199)
+ *==================================*/
+/* 文件操作 */
+#define CLOCK_IDM_OPEN_FILE 125
+#define CLOCK_IDM_RECENT_FILE_1 126
+#define CLOCK_IDM_RECENT_FILE_2 127
+#define CLOCK_IDM_RECENT_FILE_3 128
+#define CLOCK_IDM_RECENT_FILE_4 129
+#define CLOCK_IDM_RECENT_FILE_5 130
+#define CLOCK_IDM_BROWSE_FILE 131
+#define CLOCK_IDM_CURRENT_FILE 127      // 当前文件菜单项ID
+
+/* 关于与帮助 */
+#define CLOCK_IDM_ABOUT 132
+#define CLOCK_IDM_CHECK_UPDATE 133      // 检查更新菜单项ID
+#define CLOCK_IDM_HELP 134              // 帮助菜单项ID
+#define CLOCK_IDM_SUPPORT 139           // 赞助选项菜单项ID
+#define CLOCK_IDM_FEEDBACK 141          // 反馈选项菜单项ID
+
+/* 超时动作 */
+#define CLOCK_IDM_TIMEOUT_ACTION 120
+#define CLOCK_IDM_SHOW_MESSAGE 121
+#define CLOCK_IDM_LOCK_SCREEN 122
+#define CLOCK_IDM_SHUTDOWN 123
+#define CLOCK_IDM_RESTART 124
+#define CLOCK_IDM_TIMEOUT_SHOW_TIME 135 // 超时动作：显示当前时间
+#define CLOCK_IDM_TIMEOUT_COUNT_UP 136  // 超时动作：正计时
+#define CLOCK_IDM_OPEN_WEBSITE 137      // 超时动作：打开网站
+#define CLOCK_IDM_CURRENT_WEBSITE 138   // 当前网站菜单项ID
+
+/* 基本设置 */
+#define CLOCK_IDM_SHOW_CURRENT_TIME 150
+#define CLOCK_IDM_24HOUR_FORMAT 151
+#define CLOCK_IDM_SHOW_SECONDS 152
+#define CLOCK_IDM_TOPMOST 187           // 置顶选项ID
+
+/*==================================
+ * 多语言支持 (160-179)
+ *==================================*/
+#define CLOCK_IDM_LANGUAGE_MENU 160
+#define CLOCK_IDM_LANG_CHINESE 161
+#define CLOCK_IDM_LANG_ENGLISH 162
+#define CLOCK_IDM_LANG_CHINESE_TRAD 163
+#define CLOCK_IDM_LANG_SPANISH 164
+#define CLOCK_IDM_LANG_FRENCH 165
+#define CLOCK_IDM_LANG_GERMAN 166
+#define CLOCK_IDM_LANG_RUSSIAN 167
+#define CLOCK_IDM_LANG_PORTUGUESE 168
+#define CLOCK_IDM_LANG_JAPANESE 169
+#define CLOCK_IDM_LANG_KOREAN 170
+
+/*==================================
+ * 计时器功能 (170-179)
+ *==================================*/
+#define CLOCK_IDM_COUNT_UP 153
+#define CLOCK_IDM_COUNT_UP_START 171
+#define CLOCK_IDM_COUNT_UP_RESET 172
+#define CLOCK_IDM_COUNTDOWN_START_PAUSE 154
+#define CLOCK_IDM_COUNTDOWN_RESET 155
+#define CLOCK_IDC_SET_COUNTDOWN_TIME 173
+#define CLOCK_IDC_START_NO_DISPLAY 174
+#define CLOCK_IDC_START_COUNT_UP 175
+#define CLOCK_IDC_START_SHOW_TIME 176
+
+#define CLOCK_IDC_MODIFY_TIME_OPTIONS 156
+#define CLOCK_IDC_MODIFY_DEFAULT_TIME 157
+#define CLOCK_IDC_TIMEOUT_BROWSE 140
+#define CLOCK_IDC_AUTO_START 160
+
+/*==================================
+ * 番茄钟功能 (180-199, 500-599)
+ *==================================*/
+#define CLOCK_IDM_POMODORO 500
+#define CLOCK_IDM_POMODORO_START 181       // 开始番茄钟
+#define CLOCK_IDM_POMODORO_WORK 182        // 设置工作时间
+#define CLOCK_IDM_POMODORO_BREAK 183       // 设置短休息时间
+#define CLOCK_IDM_POMODORO_LBREAK 184      // 设置长休息时间
+#define CLOCK_IDM_POMODORO_LOOP_COUNT 185  // 设置循环次数
+#define CLOCK_IDM_POMODORO_RESET 186       // 重置番茄钟
+#define CLOCK_IDM_POMODORO_COMBINATION 188 // 番茄钟组合
+
+/* 番茄钟对话框 */
+#define CLOCK_IDD_POMODORO_TIME_DIALOG 510
+#define CLOCK_IDD_POMODORO_LOOP_DIALOG 513
+#define CLOCK_IDD_POMODORO_COMBO_DIALOG 514
+
+/* 番茄钟动态菜单基址 */
+#define CLOCK_IDM_POMODORO_TIME_BASE 600 // 番茄钟时间菜单项的基础ID
+
+/*==================================
+ * 通知系统 (190-199, 1000-1099, 2000-2099)
+ *==================================*/
+#define CLOCK_IDM_NOTIFICATION_CONTENT 191
+#define CLOCK_IDM_NOTIFICATION_DISPLAY 192
+#define CLOCK_IDM_NOTIFICATION_SETTINGS 193 // 整合后的通知设置菜单项
+
+/* 通知对话框 */
+#define CLOCK_IDD_NOTIFICATION_MESSAGES_DIALOG 1010
+#define CLOCK_IDD_NOTIFICATION_DISPLAY_DIALOG 1011
+#define CLOCK_IDD_NOTIFICATION_SETTINGS_DIALOG 2000
+
+/* 通知控件 - 消息编辑 */
+#define IDC_NOTIFICATION_LABEL1 2001
+#define IDC_NOTIFICATION_EDIT1 2002
+#define IDC_NOTIFICATION_LABEL2 2003
+#define IDC_NOTIFICATION_EDIT2 2004
+#define IDC_NOTIFICATION_LABEL3 2005
+#define IDC_NOTIFICATION_EDIT3 2006
+
+/* 通知控件 - 显示设置 */
+#define IDC_NOTIFICATION_TIME_LABEL 2007
+#define IDC_NOTIFICATION_TIME_EDIT 2008
+#define IDC_NOTIFICATION_OPACITY_LABEL 2009
+#define IDC_NOTIFICATION_OPACITY_EDIT 2010
+
+/* 通知控件 - 类型选择 */
+#define IDC_NOTIFICATION_TYPE_CATIME 2011
+#define IDC_NOTIFICATION_TYPE_OS 2012
+#define IDC_NOTIFICATION_TYPE_SYSTEM_MODAL 2013
+#define IDC_NOTIFICATION_SOUND_LABEL 2014
+#define IDC_NOTIFICATION_SOUND_COMBO 2015
+#define IDC_TEST_SOUND_BUTTON 2016     // 测试音频按钮
+#define IDC_OPEN_SOUND_DIR_BUTTON 2017 // 打开音频目录按钮
+#define IDC_VOLUME_LABEL 2018          // 音量标签
+#define IDC_VOLUME_SLIDER 2019         // 音量滑块
+#define IDC_VOLUME_TEXT 2020           // 音量百分比文本
+
+/* 通知窗口常量 */
+#define NOTIFICATION_MIN_WIDTH 350     // 通知窗口最小宽度(像素)
+#define NOTIFICATION_MAX_WIDTH 800     // 通知窗口最大宽度(像素)
+#define NOTIFICATION_HEIGHT 80         // 通知窗口高度(像素)
+#define NOTIFICATION_TIMER_ID 1001     // 通知超时计时器ID
+#define NOTIFICATION_CLASS_NAME L"CatimeNotificationClass" // 通知窗口类名
+#define CLOSE_BTN_SIZE 16              // 关闭按钮的大小(像素)
+#define CLOSE_BTN_MARGIN 10            // 关闭按钮边距(像素)
+#define ANIMATION_TIMER_ID 1002        // 动画计时器ID
+#define ANIMATION_STEP 5               // 每步透明度变化量(0-255)
+#define ANIMATION_INTERVAL 15          // 动画帧间隔(毫秒)
+
+/* 通知最大透明度配置 */
+extern int NOTIFICATION_MAX_OPACITY;
+extern int NOTIFICATION_TIMEOUT_MS;    // 通知显示持续时间
+
+/*==================================
+ * 关于对话框 (1050-1099)
+ *==================================*/
+#define IDD_ABOUT_DIALOG 1050
+#define IDC_ABOUT_ICON 1005
+#define IDC_VERSION_TEXT 1006
+#define IDC_LIBS_TEXT 1007
+#define IDC_AUTHOR_TEXT 1008
+#define IDC_ABOUT_OK 1009
+#define IDC_BUILD_DATE 1010
+#define IDC_COPYRIGHT 1011
+#define IDC_CREDITS_LABEL 1012 // "鸣谢："标签
+#define IDC_CREDIT_LINK 1013   // 可点击的链接
+#define IDS_CREDITS_TEXT 1014  // 字符串资源ID
+
+/* 关于对话框常量 */
+#define ABOUT_ICON_SIZE 200
+#define IDC_ABOUT_TITLE L"Catime"
+#define IDC_ABOUT_VERSION L"当前版本: "
+#define IDC_COPYRIGHT_TEXT L"Copyright (C) 2025 By vladelaina"
+
+/* 底部链接控件 */
+#define IDC_CREDITS 1015        // 鸣谢按钮
+#define IDC_FEEDBACK 1016       // 反馈按钮
+#define IDC_GITHUB 1017         // GitHub按钮
+#define IDC_COPYRIGHT_LINK 1018 // 版权声明按钮
+#define IDC_SUPPORT 1019        // 支持按钮
+#define IDC_FEEDBACK_LINK 1020  // 反馈链接
+#define IDC_GITHUB_LINK 1021    // GitHub链接
+
+/*==================================
+ * 颜色对话框 (1300-1399)
+ *==================================*/
+#define IDD_COLOR_DIALOG 1003
+#define IDC_COLOR_VALUE 1301
+#define IDC_COLOR_PANEL 1302
+
+/*==================================
+ * 启动设置对话框 (1400-1499)
+ *==================================*/
+#define IDC_STARTUP_TIME 1401
+
+/*==================================
+ * 错误与更新对话框 (700-799)
+ *==================================*/
+/* 错误对话框 */
+#define IDD_ERROR_DIALOG 700
+#define IDC_ERROR_TEXT 701
+
+/* 更新对话框 */
+#define IDD_UPDATE_DIALOG 710
+#define IDC_UPDATE_TEXT 711
+#define IDC_UPDATE_EXIT_TEXT 712
+
+/* 更新错误对话框 */
+#define IDD_UPDATE_ERROR_DIALOG 720
+#define IDC_UPDATE_ERROR_TEXT 721
+
+/* 无需更新对话框 */
+#define IDD_NO_UPDATE_DIALOG 730
+#define IDC_NO_UPDATE_TEXT 731
+
+/*==================================
+ * 字体菜单项 (300-399)
+ *==================================*/
 #define CLOCK_IDC_FONT_MENU 113
+
+/* 基础字体 */
 #define CLOCK_IDC_FONT_RECMONO 342
 #define CLOCK_IDC_FONT_DEPARTURE 320
 #define CLOCK_IDC_FONT_TERMINESS 343
@@ -48,7 +279,7 @@
 #define CLOCK_IDC_FONT_PROFONT 392
 #define CLOCK_IDC_FONT_DADDYTIME 393
 
-// 新增字体菜单项
+/* 扩展字体 */
 #define CLOCK_IDC_FONT_ARBUTUS 347
 #define CLOCK_IDC_FONT_BERKSHIRE 348
 #define CLOCK_IDC_FONT_CAVEAT 349
@@ -77,7 +308,6 @@
 #define CLOCK_IDC_FONT_PRESS_START 374
 #define CLOCK_IDC_FONT_RUBIK_BUBBLES 376
 #define CLOCK_IDC_FONT_RUBIK_BURNED 377
-#define CLOCK_IDC_FONT_RUBIK_GLITCH_POP 378
 #define CLOCK_IDC_FONT_RUBIK_GLITCH 379
 #define CLOCK_IDC_FONT_RUBIK_MARKER_HATCH 380
 #define CLOCK_IDC_FONT_RUBIK_PUDDLES 381
@@ -90,7 +320,10 @@
 #define CLOCK_IDC_FONT_UNDERDOG 388
 #define CLOCK_IDC_FONT_WALLPOET 389
 
-// 字体资源ID
+/*==================================
+ * 字体资源ID (400-499)
+ *==================================*/
+/* 基础字体资源 */
 #define IDR_FONT_RECMONO 442
 #define IDR_FONT_DEPARTURE 420
 #define IDR_FONT_TERMINESS 443
@@ -100,7 +333,7 @@
 #define IDR_FONT_PROFONT 492
 #define IDR_FONT_DADDYTIME 493
 
-// 新增字体资源ID
+/* 扩展字体资源 */
 #define IDR_FONT_ARBUTUS 447
 #define IDR_FONT_BERKSHIRE 448
 #define IDR_FONT_CAVEAT 449
@@ -129,7 +362,6 @@
 #define IDR_FONT_PRESS_START 474
 #define IDR_FONT_RUBIK_BUBBLES 476
 #define IDR_FONT_RUBIK_BURNED 477
-#define IDR_FONT_RUBIK_GLITCH_POP 478
 #define IDR_FONT_RUBIK_GLITCH 479
 #define IDR_FONT_RUBIK_MARKER_HATCH 480
 #define IDR_FONT_RUBIK_PUDDLES 481
@@ -141,209 +373,3 @@
 #define IDR_FONT_STICK 487
 #define IDR_FONT_UNDERDOG 488
 #define IDR_FONT_WALLPOET 489
-
-/* 主菜单功能项 */
-#define CLOCK_IDM_OPEN_FILE 125
-#define CLOCK_IDM_RECENT_FILE_1 126
-#define CLOCK_IDM_RECENT_FILE_2 127
-#define CLOCK_IDM_RECENT_FILE_3 128
-#define CLOCK_IDM_RECENT_FILE_4 129
-#define CLOCK_IDM_RECENT_FILE_5 130
-#define CLOCK_IDM_BROWSE_FILE 131
-#define CLOCK_IDM_ABOUT 132
-#define CLOCK_IDM_CHECK_UPDATE 133  // 添加检查更新菜单项ID
-
-/* 番茄钟功能 */
-#define CLOCK_IDM_POMODORO 500
-
-// 在番茄钟菜单项部分添加
-#define CLOCK_IDM_POMODORO_START 181   ///< 开始番茄钟
-#define CLOCK_IDM_POMODORO_WORK 182    ///< 设置工作时间
-#define CLOCK_IDM_POMODORO_BREAK 183   ///< 设置短休息时间
-#define CLOCK_IDM_POMODORO_LBREAK 184  ///< 设置长休息时间
-#define CLOCK_IDM_POMODORO_LOOP_COUNT 185 ///< 设置循环次数
-#define CLOCK_IDM_POMODORO_COMBINATION 188 ///< 番茄钟组合
-#define CLOCK_IDM_POMODORO_RESET 186  ///< 重置番茄钟
-
-/* 番茄钟对话框 */
-#define CLOCK_IDD_POMODORO_TIME_DIALOG 510
-#define CLOCK_IDD_POMODORO_LOOP_DIALOG 513
-
-/* 多语言支持 */
-#define CLOCK_IDM_LANGUAGE_MENU 160
-#define CLOCK_IDM_LANG_CHINESE 161
-#define CLOCK_IDM_LANG_ENGLISH 162
-#define CLOCK_IDM_LANG_CHINESE_TRAD 163
-#define CLOCK_IDM_LANG_SPANISH 164
-#define CLOCK_IDM_LANG_FRENCH 165
-#define CLOCK_IDM_LANG_GERMAN 166
-#define CLOCK_IDM_LANG_RUSSIAN 167
-#define CLOCK_IDM_LANG_PORTUGUESE 168
-#define CLOCK_IDM_LANG_JAPANESE 169
-#define CLOCK_IDM_LANG_KOREAN 170
-
-/* 计时器功能 */
-#define CLOCK_IDM_COUNT_UP_START 171
-#define CLOCK_IDM_COUNT_UP_RESET 172
-#define CLOCK_IDM_COUNT_UP         153
-#define CLOCK_IDM_COUNTDOWN_START_PAUSE 154
-#define CLOCK_IDM_COUNTDOWN_RESET 155
-#define CLOCK_IDC_TIMEOUT_BROWSE 140
-#define CLOCK_IDC_MODIFY_TIME_OPTIONS 156
-#define CLOCK_IDC_MODIFY_DEFAULT_TIME 157
-#define CLOCK_IDC_SET_COUNTDOWN_TIME 173
-#define CLOCK_IDC_START_NO_DISPLAY 174
-#define CLOCK_IDC_START_COUNT_UP 175
-#define CLOCK_IDC_AUTO_START 160
-#define CLOCK_IDC_START_SHOW_TIME 176
-
-/* 超时动作 */
-#define CLOCK_IDM_TIMEOUT_ACTION 120
-#define CLOCK_IDM_SHOW_MESSAGE 121
-#define CLOCK_IDM_LOCK_SCREEN 122
-#define CLOCK_IDM_SHUTDOWN 123
-#define CLOCK_IDM_RESTART 124
-#define CLOCK_IDM_CURRENT_FILE 127   // 当前文件菜单项ID
-#define CLOCK_IDM_TIMEOUT_SHOW_TIME 135  // 超时动作：显示当前时间
-#define CLOCK_IDM_TIMEOUT_COUNT_UP 136   // 超时动作：正计时
-#define CLOCK_IDM_OPEN_WEBSITE 137     // 超时动作：打开网站
-#define CLOCK_IDM_CURRENT_WEBSITE 138  // 当前网站菜单项ID
-
-/* 显示与视觉效果 */
-#define BLUR_OPACITY 192
-#define BLUR_TRANSITION_MS 200
-#define CLOCK_IDM_SHOW_CURRENT_TIME 150
-#define CLOCK_IDM_24HOUR_FORMAT    151
-#define CLOCK_IDM_SHOW_SECONDS     152
-
-/* 系统常量 */
-#define CSIDL_STARTUP 0x0007
-#define MAX_RECENT_FILES 5
-#define MAX_TIME_OPTIONS 10
-#define MIN_SCALE_FACTOR 0.5f
-#define MAX_SCALE_FACTOR 100.0f
-#define CLOCK_WM_TRAYICON (WM_USER + 2)
-
-/* 关于对话框 */
-#define IDD_ABOUT_DIALOG 1050
-#define IDC_ABOUT_ICON 1005
-#define IDC_VERSION_TEXT 1006
-#define IDC_LIBS_TEXT 1007
-#define IDC_AUTHOR_TEXT 1008
-#define IDC_ABOUT_OK 1009
-#define IDC_BUILD_DATE 1010
-#define IDC_COPYRIGHT 1011
-#define IDC_CREDITS_LABEL 1012    // "鸣谢："标签
-#define IDC_CREDIT_LINK   1013    // 可点击的链接
-#define IDS_CREDITS_TEXT 1014     // 字符串资源ID
-
-// 定义帮助菜单项ID
-#define CLOCK_IDM_HELP 134        // 添加帮助菜单项ID
-#define CLOCK_IDM_SUPPORT 139     // 添加赞助选项菜单项ID
-
-// 新增：底部链接控件ID
-#define IDC_CREDITS  1015         // 鸣谢按钮
-#define IDC_FEEDBACK 1016         // 反馈按钮
-#define IDC_GITHUB   1017         // GitHub按钮
-#define IDC_COPYRIGHT_LINK 1018   // 版权声明按钮 (原 IDC_LICENSE)
-#define IDC_SUPPORT  1019         // 支持按钮 (原 IDC_DONATE)
-
-// 在原有链接ID后面添加反馈和GitHub的链接ID
-#define IDC_FEEDBACK_LINK 1020         // 反馈链接
-#define IDC_GITHUB_LINK   1021         // GitHub链接
-
-// 鸣谢对话框相关
-#define IDD_CREDITS_DIALOG    2000
-#define IDC_CREDITS_TITLE     2001
-#define IDC_CREDITS_TEXT      2002
-#define IDC_CREDITS_MAX       2010
-#define IDC_CREDITS_XUJILONG  2011
-#define IDC_CREDITS_ZGGSONG   2012
-#define IDC_CREDITS_NEKO      2013
-#define IDC_CREDITS_MOJI      2014
-#define IDC_CREDITS_LIKANG    2015
-#define IDC_CREDITS_WUMING    2016
-#define IDC_CREDITS_FLYING    2017
-#define IDC_CREDITS_CAT       2018
-#define IDC_CREDITS_RSYQVTHV  2019
-#define IDC_CREDITS_HAMSTER   2020
-#define IDC_CREDITS_MALOU     2021
-#define IDC_CREDITS_VOLCANO   2022
-#define IDC_CREDITS_SHEEP     2023
-#define IDC_CREDITS_QINGYANG  2024
-#define IDC_CREDITS_WILLIAM   2025  // 新增：William
-#define IDC_CREDITS_WANGYE    2026  // 新增：王野
-#define IDC_CREDITS_FENGZENG  2027  // 新增：风增
-#define IDC_CREDITS_ZHUJIU    2028  // 新增：煮酒论科技
-#define IDC_CREDITS_TIANCHUN  2029  // 新增：田春
-
-// 其他常用链接
-#define URL_GITHUB_REPO     L"https://github.com/vladelaina/Catime"
-#define URL_FEEDBACK        L"https://message.bilibili.com/#/whisper/mid1862395225"
-
-// 支持对话框相关
-#define IDD_SUPPORT_DIALOG    3000
-#define IDC_SUPPORT_TEXT      3001
-#define IDC_SUPPORT_WECHAT    3002
-#define IDC_SUPPORT_ALIPAY    3003
-#define IDC_WECHAT_LABEL      3004
-#define IDC_ALIPAY_LABEL      3005
-#define IDI_WECHAT            3006
-#define IDI_ALIPAY            3007
-
-// 许可证对话框相关
-#define IDD_LICENSE_DIALOG    4000
-#define IDC_LICENSE_TEXT      4001
-
-// 颜色对话框相关
-#define IDD_COLOR_DIALOG 1003
-#define IDC_COLOR_VALUE 1301
-#define IDC_COLOR_PANEL 1302
-
-// 启动时间设置对话框相关
-#define IDD_STARTUP_TIME_DIALOG 1005
-#define IDC_STARTUP_TIME 1401
-
-// 快捷时间选项和启动设置对话框
-#define CLOCK_IDD_SHORTCUT_DIALOG 1006
-#define CLOCK_IDD_STARTUP_DIALOG 1007
-
-// 错误对话框相关
-#define IDD_ERROR_DIALOG    5000
-#define IDC_ERROR_ICON      5001  
-#define IDC_ERROR_TEXT      5002
-
-// 在预设管理菜单项部分添加
-#define CLOCK_IDM_TOPMOST 187  // 置顶选项ID
-
-// 添加网站URL输入对话框
-#define CLOCK_IDD_WEBSITE_DIALOG 1008
-
-// 修改动态ID基址
-#define CLOCK_IDM_POMODORO_TIME_BASE 600  // 番茄钟时间菜单项的基础ID
-
-// 添加番茄钟组合对话框ID
-#define CLOCK_IDD_POMODORO_COMBO_DIALOG 514
-
-// 通知设置对话框相关
-#define CLOCK_IDD_NOTIFICATION_MESSAGES_DIALOG 1010
-#define IDC_NOTIFICATION_LABEL1 1020
-#define IDC_NOTIFICATION_EDIT1 1021
-#define IDC_NOTIFICATION_LABEL2 1022
-#define IDC_NOTIFICATION_EDIT2 1023
-#define IDC_NOTIFICATION_LABEL3 1024
-#define IDC_NOTIFICATION_EDIT3 1025
-
-// 通知设置菜单项
-#define CLOCK_IDM_NOTIFICATION_CONTENT 191
-#define CLOCK_IDM_NOTIFICATION_DISPLAY 192
-
-// 通知设置对话框相关 - 添加新控件ID
-#define CLOCK_IDD_NOTIFICATION_DISPLAY_DIALOG 1011
-#define IDC_NOTIFICATION_TIME_LABEL 1030
-#define IDC_NOTIFICATION_TIME_EDIT 1031
-#define IDC_NOTIFICATION_OPACITY_LABEL 1032
-#define IDC_NOTIFICATION_OPACITY_EDIT 1033
-
-// 新增：通知最大透明度配置
-extern int NOTIFICATION_MAX_OPACITY;

@@ -8,6 +8,7 @@
  */
 
 #include "../include/config.h"
+#include "../resource/resource.h"  // 添加这一行以访问CATIME_VERSION常量
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,6 +50,14 @@ char POMODORO_CYCLE_COMPLETE_TEXT[100] = "所有番茄钟循环完成！";
 int NOTIFICATION_TIMEOUT_MS = 3000;  // 默认3秒
 // 新增配置变量：通知窗口最大透明度(百分比)
 int NOTIFICATION_MAX_OPACITY = 95;   // 默认95%透明度
+// 新增配置变量：通知类型
+NotificationType NOTIFICATION_TYPE = NOTIFICATION_TYPE_CATIME; // 默认使用Catime通知窗口
+
+// 新增：通知音频文件路径全局变量
+char NOTIFICATION_SOUND_FILE[MAX_PATH] = "";  // 默认为空
+
+// 新增：通知音频音量全局变量
+int NOTIFICATION_SOUND_VOLUME = 100;  // 默认音量100%
 
 /**
  * @brief 获取配置文件路径
@@ -100,6 +109,9 @@ void GetConfigPath(char* path, size_t size) {
 void CreateDefaultConfig(const char* config_path) {
     FILE *file = fopen(config_path, "w");
     if (file) {
+        // 添加版本标识 - 作为配置文件第一行
+        fprintf(file, "CONFIG_VERSION=%s\n", CATIME_VERSION);
+        
         // 基本设置区块 - 与WriteConfig函数保持相同顺序
         fprintf(file, "CLOCK_TEXT_COLOR=#FFB6C1\n");
         fprintf(file, "CLOCK_BASE_FONT_SIZE=20\n");
@@ -119,16 +131,34 @@ void CreateDefaultConfig(const char* config_path) {
         // 超时文本区块
         fprintf(file, "CLOCK_TIMEOUT_TEXT=0\n");
         
-        // 新增：自定义通知消息
-        fprintf(file, "CLOCK_TIMEOUT_MESSAGE_TEXT=%s\n", CLOCK_TIMEOUT_MESSAGE_TEXT);
-        fprintf(file, "POMODORO_TIMEOUT_MESSAGE_TEXT=%s\n", POMODORO_TIMEOUT_MESSAGE_TEXT); // 添加番茄钟专用提示
-        fprintf(file, "POMODORO_CYCLE_COMPLETE_TEXT=%s\n", POMODORO_CYCLE_COMPLETE_TEXT);
+        // 新增：自定义通知消息 - 使用硬编码的默认值，而不是全局变量的当前值
+        fprintf(file, "CLOCK_TIMEOUT_MESSAGE_TEXT=时间到啦！\n");
+        fprintf(file, "POMODORO_TIMEOUT_MESSAGE_TEXT=番茄钟时间到！\n"); // 添加番茄钟专用提示
+        fprintf(file, "POMODORO_CYCLE_COMPLETE_TEXT=所有番茄钟循环完成！\n");
         
         // 新增：通知显示时间
         fprintf(file, "NOTIFICATION_TIMEOUT_MS=3000\n");  // 默认3秒
         
         // 新增：通知窗口最大透明度
         fprintf(file, "NOTIFICATION_MAX_OPACITY=95\n");   // 默认95%
+        
+        // 新增：通知类型
+        const char* typeStr;
+        switch (NOTIFICATION_TYPE) {
+            case NOTIFICATION_TYPE_CATIME:
+                typeStr = "CATIME";
+                break;
+            case NOTIFICATION_TYPE_SYSTEM_MODAL:
+                typeStr = "SYSTEM_MODAL";
+                break;
+            case NOTIFICATION_TYPE_OS:
+                typeStr = "OS";
+                break;
+            default:
+                typeStr = "CATIME"; // 默认值
+                break;
+        }
+        fprintf(file, "NOTIFICATION_TYPE=%s\n", typeStr);
         
         // 番茄钟设置区块
         fprintf(file, "POMODORO_TIME_OPTIONS=1500,300,1500,600\n"); // 时间1,时间2,时间3,时间4...
@@ -146,6 +176,12 @@ void CreateDefaultConfig(const char* config_path) {
         
         // 时间选项区块
         fprintf(file, "CLOCK_TIME_OPTIONS=25,10,5\n");
+        
+        // 新增：通知音频文件路径
+        fprintf(file, "NOTIFICATION_SOUND_FILE=\n");  // 默认为空
+        
+        // 新增：通知音频音量
+        fprintf(file, "NOTIFICATION_SOUND_VOLUME=100\n");  // 默认音量100%
         
         fclose(file);
     }
@@ -183,6 +219,92 @@ void ExtractFileName(const char* path, char* name, size_t nameSize) {
 }
 
 /**
+ * @brief 检查并创建资源文件夹
+ * 
+ * 检查配置文件同目录下是否存在resources目录结构，如果不存在则创建
+ * 创建的目录结构为：resources/audio, resources/images, resources/animations, resources/themes
+ */
+void CheckAndCreateResourceFolders() {
+    char config_path[MAX_PATH];
+    char base_path[MAX_PATH];
+    char resource_path[MAX_PATH];
+    char *last_slash;
+    
+    // 获取配置文件路径
+    GetConfigPath(config_path, MAX_PATH);
+    
+    // 复制配置文件路径
+    strncpy(base_path, config_path, MAX_PATH - 1);
+    base_path[MAX_PATH - 1] = '\0';
+    
+    // 找到最后一个斜杠或反斜杠，即文件名部分的起始位置
+    last_slash = strrchr(base_path, '\\');
+    if (!last_slash) {
+        last_slash = strrchr(base_path, '/');
+    }
+    
+    if (last_slash) {
+        // 截断路径到目录部分
+        *(last_slash + 1) = '\0';
+        
+        // 创建resources主目录
+        snprintf(resource_path, MAX_PATH, "%sresources", base_path);
+        DWORD attrs = GetFileAttributesA(resource_path);
+        if (attrs == INVALID_FILE_ATTRIBUTES || !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+            if (!CreateDirectoryA(resource_path, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+                fprintf(stderr, "Failed to create resources folder: %s (Error: %lu)\n", resource_path, GetLastError());
+                return;
+            }
+        }
+        
+        // 创建audio子目录
+        snprintf(resource_path, MAX_PATH, "%sresources\\audio", base_path);
+        attrs = GetFileAttributesA(resource_path);
+        if (attrs == INVALID_FILE_ATTRIBUTES || !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+            if (!CreateDirectoryA(resource_path, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+                fprintf(stderr, "Failed to create audio folder: %s (Error: %lu)\n", resource_path, GetLastError());
+            }
+        }
+        
+        // 创建images子目录
+        snprintf(resource_path, MAX_PATH, "%sresources\\images", base_path);
+        attrs = GetFileAttributesA(resource_path);
+        if (attrs == INVALID_FILE_ATTRIBUTES || !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+            if (!CreateDirectoryA(resource_path, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+                fprintf(stderr, "Failed to create images folder: %s (Error: %lu)\n", resource_path, GetLastError());
+            }
+        }
+        
+        // 创建animations子目录
+        snprintf(resource_path, MAX_PATH, "%sresources\\animations", base_path);
+        attrs = GetFileAttributesA(resource_path);
+        if (attrs == INVALID_FILE_ATTRIBUTES || !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+            if (!CreateDirectoryA(resource_path, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+                fprintf(stderr, "Failed to create animations folder: %s (Error: %lu)\n", resource_path, GetLastError());
+            }
+        }
+        
+        // 创建themes子目录
+        snprintf(resource_path, MAX_PATH, "%sresources\\themes", base_path);
+        attrs = GetFileAttributesA(resource_path);
+        if (attrs == INVALID_FILE_ATTRIBUTES || !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+            if (!CreateDirectoryA(resource_path, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+                fprintf(stderr, "Failed to create themes folder: %s (Error: %lu)\n", resource_path, GetLastError());
+            }
+        }
+        
+        // 创建plug-in子目录
+        snprintf(resource_path, MAX_PATH, "%sresources\\plug-in", base_path);
+        attrs = GetFileAttributesA(resource_path);
+        if (attrs == INVALID_FILE_ATTRIBUTES || !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+            if (!CreateDirectoryA(resource_path, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+                fprintf(stderr, "Failed to create plug-in folder: %s (Error: %lu)\n", resource_path, GetLastError());
+            }
+        }
+    }
+}
+
+/**
  * @brief 读取并解析配置文件
  * 
  * 从配置路径读取配置项，若文件不存在则自动创建默认配置。
@@ -190,6 +312,9 @@ void ExtractFileName(const char* path, char* name, size_t nameSize) {
  * 支持兼容性处理，确保新旧版本配置文件均可正确读取。
  */
 void ReadConfig() {
+    // 检查并创建资源文件夹
+    CheckAndCreateResourceFolders();
+    
     char config_path[MAX_PATH];
     GetConfigPath(config_path, MAX_PATH);
     
@@ -203,17 +328,61 @@ void ReadConfig() {
         }
     }
 
+    // 检查配置文件版本
+    char line[256];
+    BOOL versionFound = FALSE;
+    BOOL versionMatched = FALSE;
+    
+    // 读取第一行检查版本信息
+    if (fgets(line, sizeof(line), file)) {
+        size_t len = strlen(line);
+        if (len > 0 && line[len-1] == '\n') {
+            line[len-1] = '\0';
+        }
+        
+        if (strncmp(line, "CONFIG_VERSION=", 15) == 0) {
+            versionFound = TRUE;
+            // 比较版本是否匹配
+            if (strcmp(line + 15, CATIME_VERSION) == 0) {
+                versionMatched = TRUE;
+            }
+        }
+    }
+    
+    // 如果版本不匹配或不存在版本信息，重新创建配置文件
+    if (!versionFound || !versionMatched) {
+        // 关闭旧文件
+        fclose(file);
+        
+        // 创建新的默认配置文件
+        CreateDefaultConfig(config_path);
+        
+        // 重新打开配置文件
+        file = fopen(config_path, "r");
+        if (!file) {
+            fprintf(stderr, "Failed to open config file after recreation: %s\n", config_path);
+            return;
+        }
+    } else {
+        // 如果版本匹配，将文件指针重置到文件开始以便重新读取所有配置
+        rewind(file);
+    }
+
     time_options_count = 0;
     memset(time_options, 0, sizeof(time_options));
     
     // 重置最近文件计数
     CLOCK_RECENT_FILES_COUNT = 0;
 
-    char line[256];
     while (fgets(line, sizeof(line), file)) {
         size_t len = strlen(line);
         if (len > 0 && line[len-1] == '\n') {
             line[len-1] = '\0';
+        }
+
+        // 跳过版本信息行
+        if (strncmp(line, "CONFIG_VERSION=", 15) == 0) {
+            continue;
         }
 
         if (strncmp(line, "COLOR_OPTIONS=", 13) == 0) {
@@ -458,6 +627,28 @@ void ReadConfig() {
                 NOTIFICATION_MAX_OPACITY = opacity;
             }
         }
+        else if (strncmp(line, "NOTIFICATION_SOUND_FILE=", 23) == 0) {
+            char* value = line + 23;  // 正确的偏移量，跳过"NOTIFICATION_SOUND_FILE="
+            // 移除末尾的换行符
+            char* newline = strchr(value, '\n');
+            if (newline) *newline = '\0';
+            
+            // 确保路径不包含等号
+            if (value[0] == '=') {
+                value++; // 如果第一个字符是等号，跳过它
+            }
+            
+            // 复制到全局变量，确保清零
+            memset(NOTIFICATION_SOUND_FILE, 0, MAX_PATH);
+            strncpy(NOTIFICATION_SOUND_FILE, value, MAX_PATH - 1);
+            NOTIFICATION_SOUND_FILE[MAX_PATH - 1] = '\0';
+        }
+        else if (strncmp(line, "NOTIFICATION_SOUND_VOLUME=", 26) == 0) {
+            int volume = atoi(line + 26);
+            if (volume >= 0 && volume <= 100) {
+                NOTIFICATION_SOUND_VOLUME = volume;
+            }
+        }
     }
 
     fclose(file);
@@ -492,6 +683,24 @@ void ReadConfig() {
         // 确保循环次数至少为1
         if (POMODORO_LOOP_COUNT < 1) POMODORO_LOOP_COUNT = 1;
     }
+    
+    // 查找通知显示时间配置
+    ReadNotificationTimeoutConfig();
+    
+    // 查找通知透明度配置
+    ReadNotificationOpacityConfig();
+    
+    // 查找通知类型配置
+    ReadNotificationTypeConfig();
+    
+    // 查找通知音频配置
+    ReadNotificationSoundConfig();
+    
+    // 查找通知音频音量配置
+    ReadNotificationVolumeConfig();
+    
+    // 关闭文件
+    fclose(file);
 }
 
 /**
@@ -524,7 +733,7 @@ void WriteConfigTimeoutAction(const char* action) {
     
     // 如果是关机或重启，不写入配置文件，而是写入"MESSAGE"
     const char* actual_action = action;
-    if (strcmp(action, "RESTART") == 0 || strcmp(action, "SHUTDOWN") == 0) {
+    if (strcmp(action, "RESTART") == 0 || strcmp(action, "SHUTDOWN") == 0 || strcmp(action, "SLEEP") == 0) {
         actual_action = "MESSAGE";
     }
     
@@ -1060,6 +1269,9 @@ void WriteConfig(const char* config_path) {
     FILE* file = fopen(config_path, "w");
     if (!file) return;
     
+    // 添加版本标识 - 作为配置文件第一行
+    fprintf(file, "CONFIG_VERSION=%s\n", CATIME_VERSION);
+    
     // 基本设置区块
     fprintf(file, "CLOCK_TEXT_COLOR=%s\n", CLOCK_TEXT_COLOR);
     fprintf(file, "CLOCK_BASE_FONT_SIZE=%d\n", CLOCK_BASE_FONT_SIZE);
@@ -1086,7 +1298,7 @@ void WriteConfig(const char* config_path) {
     
     // 新增：自定义通知消息
     fprintf(file, "CLOCK_TIMEOUT_MESSAGE_TEXT=%s\n", CLOCK_TIMEOUT_MESSAGE_TEXT);
-    fprintf(file, "POMODORO_TIMEOUT_MESSAGE_TEXT=%s\n", POMODORO_TIMEOUT_MESSAGE_TEXT); // 添加番茄钟专用提示
+    fprintf(file, "POMODORO_TIMEOUT_MESSAGE_TEXT=%s\n", POMODORO_TIMEOUT_MESSAGE_TEXT);
     fprintf(file, "POMODORO_CYCLE_COMPLETE_TEXT=%s\n", POMODORO_CYCLE_COMPLETE_TEXT);
     
     // 新增：通知显示时间
@@ -1094,6 +1306,24 @@ void WriteConfig(const char* config_path) {
     
     // 新增：通知最大透明度
     fprintf(file, "NOTIFICATION_MAX_OPACITY=%d\n", NOTIFICATION_MAX_OPACITY);
+    
+    // 新增：通知类型
+    const char* typeStr;
+    switch (NOTIFICATION_TYPE) {
+        case NOTIFICATION_TYPE_CATIME:
+            typeStr = "CATIME";
+            break;
+        case NOTIFICATION_TYPE_SYSTEM_MODAL:
+            typeStr = "SYSTEM_MODAL";
+            break;
+        case NOTIFICATION_TYPE_OS:
+            typeStr = "OS";
+            break;
+        default:
+            typeStr = "CATIME"; // 默认值
+            break;
+    }
+    fprintf(file, "NOTIFICATION_TYPE=%s\n", typeStr);
     
     // 番茄钟设置区块
     fprintf(file, "POMODORO_TIME_OPTIONS=");
@@ -1114,7 +1344,8 @@ void WriteConfig(const char* config_path) {
     } else {
         // 确保关机和重启选项不会被永久保存到配置文件中
         if (CLOCK_TIMEOUT_ACTION == TIMEOUT_ACTION_SHUTDOWN || 
-            CLOCK_TIMEOUT_ACTION == TIMEOUT_ACTION_RESTART) {
+            CLOCK_TIMEOUT_ACTION == TIMEOUT_ACTION_RESTART ||
+            CLOCK_TIMEOUT_ACTION == TIMEOUT_ACTION_SLEEP) {
             fprintf(file, "CLOCK_TIMEOUT_ACTION=MESSAGE\n");
         } else {
             switch (CLOCK_TIMEOUT_ACTION) {
@@ -1147,6 +1378,12 @@ void WriteConfig(const char* config_path) {
     }
     fprintf(file, "\n");
     
+    // 新增：通知音频文件路径
+    fprintf(file, "NOTIFICATION_SOUND_FILE=\n");  // 默认为空
+    
+    // 新增：通知音频音量
+    fprintf(file, "NOTIFICATION_SOUND_VOLUME=100\n");  // 默认音量100%
+    
     fclose(file);
 }
 
@@ -1158,59 +1395,62 @@ void WriteConfig(const char* config_path) {
  * 使用临时文件方式确保配置更新过程安全可靠。
  */
 void WriteConfigTimeoutWebsite(const char* url) {
-    // 首先更新全局变量
-    CLOCK_TIMEOUT_ACTION = TIMEOUT_ACTION_OPEN_WEBSITE;
-    strncpy(CLOCK_TIMEOUT_WEBSITE_URL, url, MAX_PATH - 1);
-    CLOCK_TIMEOUT_WEBSITE_URL[MAX_PATH - 1] = '\0';
-    
-    // 然后更新配置文件
-    char config_path[MAX_PATH];
-    GetConfigPath(config_path, MAX_PATH);
-    
-    FILE* file = fopen(config_path, "r");
-    if (!file) return;
-    
-    char temp_path[MAX_PATH];
-    strcpy(temp_path, config_path);
-    strcat(temp_path, ".tmp");
-    
-    FILE* temp = fopen(temp_path, "w");
-    if (!temp) {
-        fclose(file);
-        return;
-    }
-    
-    char line[MAX_PATH];
-    BOOL actionFound = FALSE;
-    BOOL urlFound = FALSE;
-    
-    // 读取原配置文件，更新超时动作和URL
-    while (fgets(line, sizeof(line), file)) {
-        if (strncmp(line, "CLOCK_TIMEOUT_ACTION=", 21) == 0) {
-            fprintf(temp, "CLOCK_TIMEOUT_ACTION=OPEN_WEBSITE\n");
-            actionFound = TRUE;
-        } else if (strncmp(line, "CLOCK_TIMEOUT_WEBSITE=", 22) == 0) {
-            fprintf(temp, "CLOCK_TIMEOUT_WEBSITE=%s\n", url);
-            urlFound = TRUE;
-        } else {
-            // 保留其他所有配置
-            fputs(line, temp);
+    // 只有在提供了有效URL的情况下才设置超时动作为打开网站
+    if (url && url[0] != '\0') {
+        // 首先更新全局变量
+        CLOCK_TIMEOUT_ACTION = TIMEOUT_ACTION_OPEN_WEBSITE;
+        strncpy(CLOCK_TIMEOUT_WEBSITE_URL, url, MAX_PATH - 1);
+        CLOCK_TIMEOUT_WEBSITE_URL[MAX_PATH - 1] = '\0';
+        
+        // 然后更新配置文件
+        char config_path[MAX_PATH];
+        GetConfigPath(config_path, MAX_PATH);
+        
+        FILE* file = fopen(config_path, "r");
+        if (!file) return;
+        
+        char temp_path[MAX_PATH];
+        strcpy(temp_path, config_path);
+        strcat(temp_path, ".tmp");
+        
+        FILE* temp = fopen(temp_path, "w");
+        if (!temp) {
+            fclose(file);
+            return;
         }
+        
+        char line[MAX_PATH];
+        BOOL actionFound = FALSE;
+        BOOL urlFound = FALSE;
+        
+        // 读取原配置文件，更新超时动作和URL
+        while (fgets(line, sizeof(line), file)) {
+            if (strncmp(line, "CLOCK_TIMEOUT_ACTION=", 21) == 0) {
+                fprintf(temp, "CLOCK_TIMEOUT_ACTION=OPEN_WEBSITE\n");
+                actionFound = TRUE;
+            } else if (strncmp(line, "CLOCK_TIMEOUT_WEBSITE=", 22) == 0) {
+                fprintf(temp, "CLOCK_TIMEOUT_WEBSITE=%s\n", url);
+                urlFound = TRUE;
+            } else {
+                // 保留其他所有配置
+                fputs(line, temp);
+            }
+        }
+        
+        // 如果配置中没有这些项，添加它们
+        if (!actionFound) {
+            fprintf(temp, "CLOCK_TIMEOUT_ACTION=OPEN_WEBSITE\n");
+        }
+        if (!urlFound) {
+            fprintf(temp, "CLOCK_TIMEOUT_WEBSITE=%s\n", url);
+        }
+        
+        fclose(file);
+        fclose(temp);
+        
+        remove(config_path);
+        rename(temp_path, config_path);
     }
-    
-    // 如果配置中没有这些项，添加它们
-    if (!actionFound) {
-        fprintf(temp, "CLOCK_TIMEOUT_ACTION=OPEN_WEBSITE\n");
-    }
-    if (!urlFound) {
-        fprintf(temp, "CLOCK_TIMEOUT_WEBSITE=%s\n", url);
-    }
-    
-    fclose(file);
-    fclose(temp);
-    
-    remove(config_path);
-    rename(temp_path, config_path);
 }
 
 /**
@@ -1836,4 +2076,320 @@ void WriteConfigNotificationOpacity(int opacity) {
     
     // 更新全局变量
     NOTIFICATION_MAX_OPACITY = opacity;
+}
+
+/**
+ * @brief 从配置文件中读取通知类型设置
+ *
+ * 读取配置文件中的NOTIFICATION_TYPE项，并更新全局变量。
+ * 若配置项不存在，保持默认值（Catime通知窗口）。
+ */
+void ReadNotificationTypeConfig(void) {
+    char config_path[MAX_PATH];
+    GetConfigPath(config_path, MAX_PATH);
+    
+    FILE *file = fopen(config_path, "r");
+    if (file) {
+        char line[256];
+        while (fgets(line, sizeof(line), file)) {
+            if (strncmp(line, "NOTIFICATION_TYPE=", 18) == 0) {
+                char typeStr[32] = {0};
+                sscanf(line + 18, "%31s", typeStr);
+                
+                // 根据字符串设置通知类型
+                if (strcmp(typeStr, "CATIME") == 0) {
+                    NOTIFICATION_TYPE = NOTIFICATION_TYPE_CATIME;
+                } else if (strcmp(typeStr, "SYSTEM_MODAL") == 0) {
+                    NOTIFICATION_TYPE = NOTIFICATION_TYPE_SYSTEM_MODAL;
+                } else if (strcmp(typeStr, "OS") == 0) {
+                    NOTIFICATION_TYPE = NOTIFICATION_TYPE_OS;
+                } else {
+                    // 无效类型使用默认值
+                    NOTIFICATION_TYPE = NOTIFICATION_TYPE_CATIME;
+                }
+                break;
+            }
+        }
+        fclose(file);
+    }
+}
+
+/**
+ * @brief 写入通知类型配置
+ * @param type 通知类型枚举值
+ *
+ * 更新配置文件中的通知类型设置，采用临时文件方式确保配置更新安全。
+ */
+void WriteConfigNotificationType(NotificationType type) {
+    char config_path[MAX_PATH];
+    GetConfigPath(config_path, MAX_PATH);
+    
+    // 确保类型值在有效范围内
+    if (type < NOTIFICATION_TYPE_CATIME || type > NOTIFICATION_TYPE_OS) {
+        type = NOTIFICATION_TYPE_CATIME; // 默认值
+    }
+    
+    // 更新全局变量
+    NOTIFICATION_TYPE = type;
+    
+    // 将枚举转换为字符串
+    const char* typeStr;
+    switch (type) {
+        case NOTIFICATION_TYPE_CATIME:
+            typeStr = "CATIME";
+            break;
+        case NOTIFICATION_TYPE_SYSTEM_MODAL:
+            typeStr = "SYSTEM_MODAL";
+            break;
+        case NOTIFICATION_TYPE_OS:
+            typeStr = "OS";
+            break;
+        default:
+            typeStr = "CATIME"; // 默认值
+            break;
+    }
+    
+    // 构建临时文件路径
+    char temp_path[MAX_PATH];
+    strncpy(temp_path, config_path, MAX_PATH - 5);
+    strcat(temp_path, ".tmp");
+    
+    FILE *source = fopen(config_path, "r");
+    FILE *target = fopen(temp_path, "w");
+    
+    if (source && target) {
+        char line[256];
+        BOOL found = FALSE;
+        
+        // 复制文件内容，替换目标配置行
+        while (fgets(line, sizeof(line), source)) {
+            if (strncmp(line, "NOTIFICATION_TYPE=", 18) == 0) {
+                fprintf(target, "NOTIFICATION_TYPE=%s\n", typeStr);
+                found = TRUE;
+            } else {
+                fputs(line, target);
+            }
+        }
+        
+        // 如果没找到配置项，添加到文件末尾
+        if (!found) {
+            fprintf(target, "NOTIFICATION_TYPE=%s\n", typeStr);
+        }
+        
+        fclose(source);
+        fclose(target);
+        
+        // 替换原始文件
+        remove(config_path);
+        rename(temp_path, config_path);
+    } else {
+        // 清理可能打开的文件
+        if (source) fclose(source);
+        if (target) fclose(target);
+    }
+}
+
+/**
+ * @brief 获取音频文件夹路径
+ * @param path 存储音频文件夹路径的缓冲区
+ * @param size 缓冲区大小
+ */
+void GetAudioFolderPath(char* path, size_t size) {
+    if (!path || size == 0) return;
+
+    char* appdata_path = getenv("LOCALAPPDATA");
+    if (appdata_path) {
+        if (snprintf(path, size, "%s\\Catime\\resources\\audio", appdata_path) >= size) {
+            strncpy(path, ".\\resources\\audio", size - 1);
+            path[size - 1] = '\0';
+            return;
+        }
+        
+        char dir_path[MAX_PATH];
+        if (snprintf(dir_path, sizeof(dir_path), "%s\\Catime\\resources\\audio", appdata_path) < sizeof(dir_path)) {
+            if (!CreateDirectoryA(dir_path, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+                strncpy(path, ".\\resources\\audio", size - 1);
+                path[size - 1] = '\0';
+            }
+        }
+    } else {
+        strncpy(path, ".\\resources\\audio", size - 1);
+        path[size - 1] = '\0';
+    }
+}
+
+/**
+ * @brief 从配置文件中读取通知音频设置
+ */
+void ReadNotificationSoundConfig(void) {
+    char config_path[MAX_PATH];
+    GetConfigPath(config_path, MAX_PATH);
+    
+    FILE* file = fopen(config_path, "r");
+    if (!file) return;
+    
+    char line[1024];
+    while (fgets(line, sizeof(line), file)) {
+        if (strncmp(line, "NOTIFICATION_SOUND_FILE=", 23) == 0) {
+            char* value = line + 23;  // 正确的偏移量，跳过"NOTIFICATION_SOUND_FILE="
+            // 移除末尾的换行符
+            char* newline = strchr(value, '\n');
+            if (newline) *newline = '\0';
+            
+            // 确保路径不包含等号
+            if (value[0] == '=') {
+                value++; // 如果第一个字符是等号，跳过它
+            }
+            
+            // 复制到全局变量，确保清零
+            memset(NOTIFICATION_SOUND_FILE, 0, MAX_PATH);
+            strncpy(NOTIFICATION_SOUND_FILE, value, MAX_PATH - 1);
+            NOTIFICATION_SOUND_FILE[MAX_PATH - 1] = '\0';
+            break;
+        }
+    }
+    
+    fclose(file);
+}
+
+/**
+ * @brief 写入通知音频配置
+ * @param sound_file 音频文件路径
+ */
+void WriteConfigNotificationSound(const char* sound_file) {
+    if (!sound_file) return;
+    
+    // 检查路径是否包含等号，如果有则移除
+    char clean_path[MAX_PATH] = {0};
+    const char* src = sound_file;
+    char* dst = clean_path;
+    
+    while (*src && (dst - clean_path) < (MAX_PATH - 1)) {
+        if (*src != '=') {
+            *dst++ = *src;
+        }
+        src++;
+    }
+    *dst = '\0';
+    
+    char config_path[MAX_PATH];
+    char temp_path[MAX_PATH];
+    GetConfigPath(config_path, MAX_PATH);
+    
+    // 创建临时文件路径
+    snprintf(temp_path, MAX_PATH, "%s.tmp", config_path);
+    
+    FILE* source = fopen(config_path, "r");
+    if (!source) return;
+    
+    FILE* dest = fopen(temp_path, "w");
+    if (!dest) {
+        fclose(source);
+        return;
+    }
+    
+    char line[1024];
+    int found = 0;
+    
+    // 复制文件内容，替换或添加通知音频设置
+    while (fgets(line, sizeof(line), source)) {
+        if (strncmp(line, "NOTIFICATION_SOUND_FILE=", 23) == 0) {
+            fprintf(dest, "NOTIFICATION_SOUND_FILE=%s\n", clean_path);
+            found = 1;
+        } else {
+            fputs(line, dest);
+        }
+    }
+    
+    // 如果没有找到配置项，添加到文件末尾
+    if (!found) {
+        fprintf(dest, "NOTIFICATION_SOUND_FILE=%s\n", clean_path);
+    }
+    
+    fclose(source);
+    fclose(dest);
+    
+    // 替换原文件
+    remove(config_path);
+    rename(temp_path, config_path);
+    
+    // 更新全局变量
+    memset(NOTIFICATION_SOUND_FILE, 0, MAX_PATH);
+    strncpy(NOTIFICATION_SOUND_FILE, clean_path, MAX_PATH - 1);
+    NOTIFICATION_SOUND_FILE[MAX_PATH - 1] = '\0';
+}
+
+/**
+ * @brief 从配置文件中读取通知音频音量
+ */
+void ReadNotificationVolumeConfig(void) {
+    char config_path[MAX_PATH];
+    GetConfigPath(config_path, MAX_PATH);
+    
+    FILE* file = fopen(config_path, "r");
+    if (!file) return;
+    
+    char line[256];
+    while (fgets(line, sizeof(line), file)) {
+        if (strncmp(line, "NOTIFICATION_SOUND_VOLUME=", 26) == 0) {
+            int volume = atoi(line + 26);
+            if (volume >= 0 && volume <= 100) {
+                NOTIFICATION_SOUND_VOLUME = volume;
+            }
+            break;
+        }
+    }
+    
+    fclose(file);
+}
+
+/**
+ * @brief 写入通知音频音量配置
+ * @param volume 音量百分比值(0-100)
+ */
+void WriteConfigNotificationVolume(int volume) {
+    // 验证音量范围
+    if (volume < 0) volume = 0;
+    if (volume > 100) volume = 100;
+    
+    // 更新全局变量
+    NOTIFICATION_SOUND_VOLUME = volume;
+    
+    char config_path[MAX_PATH];
+    GetConfigPath(config_path, MAX_PATH);
+    
+    FILE* file = fopen(config_path, "r");
+    if (!file) return;
+    
+    char temp_path[MAX_PATH];
+    strcpy(temp_path, config_path);
+    strcat(temp_path, ".tmp");
+    
+    FILE* temp = fopen(temp_path, "w");
+    if (!temp) {
+        fclose(file);
+        return;
+    }
+    
+    char line[256];
+    BOOL found = FALSE;
+    
+    while (fgets(line, sizeof(line), file)) {
+        if (strncmp(line, "NOTIFICATION_SOUND_VOLUME=", 26) == 0) {
+            fprintf(temp, "NOTIFICATION_SOUND_VOLUME=%d\n", volume);
+            found = TRUE;
+        } else {
+            fputs(line, temp);
+        }
+    }
+    
+    if (!found) {
+        fprintf(temp, "NOTIFICATION_SOUND_VOLUME=%d\n", volume);
+    }
+    
+    fclose(file);
+    fclose(temp);
+    
+    remove(config_path);
+    rename(temp_path, config_path);
 }

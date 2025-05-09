@@ -34,39 +34,15 @@ INT_PTR CALLBACK DlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam);
  * 
  * 显示包含程序版本、作者和第三方库信息的关于对话框。
  * 包含以下链接按钮：
- * - 鸣谢 (IDC_CREDITS)
+ * - 鸣谢 (IDC_CREDITS) - 打开网页 https://vladelaina.github.io/Catime/#thanks
  * - 反馈 (IDC_FEEDBACK)
  * - GitHub (IDC_GITHUB)
- * - 开源协议 (IDC_LICENSE)
- * - 支持 (IDC_SUPPORT)
+ * - 版权声明 (IDC_COPYRIGHT_LINK) - 打开网页 https://github.com/vladelaina/Catime?tab=readme-ov-file#%EF%B8%8F%E7%89%88%E6%9D%83%E5%A3%B0%E6%98%8E
+ * - 支持 (IDC_SUPPORT) - 打开网页 https://vladelaina.github.io/Catime/support.html
  */
 void ShowAboutDialog(HWND hwndParent);
 
 INT_PTR CALLBACK AboutDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam);
-
-/**
- * @brief 显示鸣谢对话框
- * @param hwndParent 父窗口句柄
- * 
- * 显示包含项目贡献者名单的鸣谢对话框。
- */
-void ShowCreditsDialog(HWND hwndParent);
-
-/**
- * @brief 显示支持对话框
- * @param hwndParent 父窗口句柄
- * 
- * 显示包含微信和支付宝打赏二维码的支持对话框。
- */
-void ShowSupportDialog(HWND hwndParent);
-
-/**
- * @brief 显示许可证对话框
- * @param hwndParent 父窗口句柄
- * 
- * 显示包含MIT许可证文本的对话框。
- */
-void ShowLicenseDialog(HWND hwndParent);
 
 /**
  * @brief 显示错误对话框
@@ -127,5 +103,14 @@ void ShowNotificationMessagesDialog(HWND hwndParent);
  * 显示通知显示设置对话框，用于修改通知显示时间和透明度。
  */
 void ShowNotificationDisplayDialog(HWND hwndParent);
+
+/**
+ * @brief 显示整合后的通知设置对话框
+ * @param hwndParent 父窗口句柄
+ * 
+ * 显示同时包含通知内容和通知显示设置的整合对话框。
+ * 与之前的两个单独对话框不同，这个对话框整合了所有通知相关设置。
+ */
+void ShowNotificationSettingsDialog(HWND hwndParent);
 
 #endif // DIALOG_PROCEDURE_H

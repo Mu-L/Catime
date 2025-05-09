@@ -47,7 +47,7 @@ extern int elapsed_time;
 extern int message_shown;
 
 // 从main.c引入的函数声明
-extern void ShowToastNotification(HWND hwnd, const char* message);
+extern void ShowNotification(HWND hwnd, const char* message);
 extern void PauseMediaPlayback(void);
 
 // 在文件开头添加这些外部变量声明
@@ -82,6 +82,9 @@ extern void OpenUserGuide(void);
 
 // 添加对OpenSupportPage函数的声明
 extern void OpenSupportPage(void);
+
+// 添加对OpenFeedbackPage函数的声明
+extern void OpenFeedbackPage(void);
 
 // 辅助函数：检查字符串是否只包含空格
 static BOOL isAllSpacesOnly(const char* str) {
@@ -316,6 +319,10 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
                         int total_seconds = 0;
                         if (ParseInput(inputText, &total_seconds)) {
+                            // 停止任何可能正在播放的通知音频
+                            extern void StopNotificationSound(void);
+                            StopNotificationSound();
+                            
                             KillTimer(hwnd, 1);
                             CLOCK_TOTAL_TIME = total_seconds;
                             countdown_elapsed_time = 0;
@@ -364,6 +371,10 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                 // 处理便捷时间选项 (102-102+MAX_TIME_OPTIONS)
                 case 102: case 103: case 104: case 105: case 106:
                 case 107: case 108: {
+                    // 停止任何可能正在播放的通知音频
+                    extern void StopNotificationSound(void);
+                    StopNotificationSound();
+                    
                     int index = cmd - 102;
                     if (index >= 0 && index < time_options_count) {
                         int minutes = time_options[index];
@@ -439,6 +450,10 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                         }
 
                         if (valid && count > 0) {
+                            // 停止任何可能正在播放的通知音频
+                            extern void StopNotificationSound(void);
+                            StopNotificationSound();
+                            
                             WriteConfigTimeOptions(options);
                             ReadConfig();
                             break;
@@ -478,6 +493,10 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
                         int total_seconds = 0;
                         if (ParseInput(inputText, &total_seconds)) {
+                            // 停止任何可能正在播放的通知音频
+                            extern void StopNotificationSound(void);
+                            StopNotificationSound();
+                            
                             WriteConfigDefaultStartTime(total_seconds);
                             WriteConfigStartupMode("COUNTDOWN");
                             ReadConfig();
@@ -505,6 +524,10 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     break;
                 }
                 case 200: {   
+                    // 停止任何可能正在播放的通知音频
+                    extern void StopNotificationSound(void);
+                    StopNotificationSound();
+                    
                     // 先停止所有计时器，确保没有计时事件会继续处理
                     KillTimer(hwnd, 1);
                     
@@ -520,6 +543,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     // 从timer.c引入高精度计时器初始化函数
                     extern BOOL InitializeHighPrecisionTimer(void);
                     extern void ResetTimer(void);    // 使用专门的重置函数
+                    extern void ReadNotificationMessagesConfig(void); // 读取通知消息配置
                     
                     // 重置所有计时器状态变量 - 顺序很重要!
                     CLOCK_TOTAL_TIME = 25 * 60;      // 1. 先设置总时间为25分钟
@@ -609,6 +633,9 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     
                     // 重新读取配置
                     ReadConfig();
+                    
+                    // 确保重新读取通知消息
+                    ReadNotificationMessagesConfig();
                     
                     // 恢复默认字体
                     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
@@ -748,14 +775,17 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     break;
                 }
                 case CLOCK_IDM_COUNTDOWN_RESET: {
-                    // 调用 ResetTimer 重置计时器状态
-                    extern void ResetTimer(void);
-                    ResetTimer();
-                    
-                    // 确保是倒计时模式
+                    // 停止任何可能正在播放的通知音频
+                    extern void StopNotificationSound(void);
+                    StopNotificationSound();
+
                     if (CLOCK_COUNT_UP) {
                         CLOCK_COUNT_UP = FALSE;  // 切换到倒计时模式
                     }
+                    
+                    // Reset the countdown timer
+                    extern void ResetTimer(void);
+                    ResetTimer();
                     
                     // 重启定时器
                     KillTimer(hwnd, 1);
@@ -764,7 +794,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     // 强制重绘窗口
                     InvalidateRect(hwnd, NULL, TRUE);
                     
-                    // 确保窗口置顶并可见
+                    // 确保重置后窗口置顶并可见
                     HandleWindowReset(hwnd);
                     break;
                 }
@@ -913,10 +943,6 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     WriteConfigFont("Rubik Burned Essence.ttf");
                     goto refresh_window;
                 }
-                case CLOCK_IDC_FONT_RUBIK_GLITCH_POP: {
-                    WriteConfigFont("Rubik Glitch Pop Essence.ttf");
-                    goto refresh_window;
-                }
                 case CLOCK_IDC_FONT_RUBIK_GLITCH: {
                     WriteConfigFont("Rubik Glitch Essence.ttf");
                     goto refresh_window;
@@ -978,6 +1004,10 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     goto refresh_window;
                 }
                 case CLOCK_IDM_SHOW_CURRENT_TIME: {  
+                    // 停止任何可能正在播放的通知音频
+                    extern void StopNotificationSound(void);
+                    StopNotificationSound();
+
                     CLOCK_SHOW_CURRENT_TIME = !CLOCK_SHOW_CURRENT_TIME;
                     if (CLOCK_SHOW_CURRENT_TIME) {
                         
@@ -989,7 +1019,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                         countdown_elapsed_time = 0;
                         CLOCK_TOTAL_TIME = 0; // 确保总时间被重置
                         CLOCK_LAST_TIME_UPDATE = time(NULL);
-                        SetTimer(hwnd, 1, 1000, NULL);   
+                        SetTimer(hwnd, 1, 100, NULL); // 减少间隔到100毫秒，提高刷新频率
                     } else {
                         KillTimer(hwnd, 1);   
                         elapsed_time = CLOCK_TOTAL_TIME;   
@@ -1162,6 +1192,10 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     break;
                 }
                 case CLOCK_IDM_COUNT_UP: {
+                    // 停止任何可能正在播放的通知音频
+                    extern void StopNotificationSound(void);
+                    StopNotificationSound();
+
                     CLOCK_COUNT_UP = !CLOCK_COUNT_UP;
                     if (CLOCK_COUNT_UP) {
                         ShowWindow(hwnd, SW_SHOW);
@@ -1174,59 +1208,35 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     break;
                 }
                 case CLOCK_IDM_COUNT_UP_START: {
+                    // 停止任何可能正在播放的通知音频
+                    extern void StopNotificationSound(void);
+                    StopNotificationSound();
+
                     if (!CLOCK_COUNT_UP) {
                         CLOCK_COUNT_UP = TRUE;
-                        CLOCK_SHOW_CURRENT_TIME = FALSE;
-                        countdown_elapsed_time = 0;
-                        CLOCK_IS_PAUSED = FALSE;
                         
                         // 确保每次切换到正计时模式时，计时器从0开始
                         countup_elapsed_time = 0;
-                        elapsed_time = 0;
-                        message_shown = FALSE;
-                        countdown_message_shown = FALSE;
-                        CLOCK_TOTAL_TIME = 0; // 重置总时间，确保番茄钟状态完全清除
-                        countup_message_shown = FALSE;
-                        
-                        // 设置番茄钟状态为空闲
-                        extern POMODORO_PHASE current_pomodoro_phase;
-                        extern void InitializePomodoro(void);
-                        InitializePomodoro();
-                        
-                        ShowWindow(hwnd, SW_SHOW);
-                        
+                        CLOCK_SHOW_CURRENT_TIME = FALSE;
                         KillTimer(hwnd, 1);
                         SetTimer(hwnd, 1, 1000, NULL);
                     } else {
+                        // 已经处于正计时模式，则切换暂停/运行状态
                         CLOCK_IS_PAUSED = !CLOCK_IS_PAUSED;
-                        if (CLOCK_IS_PAUSED) {
-                            KillTimer(hwnd, 1);
-                        } else {
-                            SetTimer(hwnd, 1, 1000, NULL);
-                        }
                     }
+                    
                     InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
                 case CLOCK_IDM_COUNT_UP_RESET: {
-                    // 调用 ResetTimer 重置计时器状态
+                    // 停止任何可能正在播放的通知音频
+                    extern void StopNotificationSound(void);
+                    StopNotificationSound();
+
+                    // 重置正计时计数器
                     extern void ResetTimer(void);
                     ResetTimer();
-                    
-                    // 确保是正计时模式
-                    if (!CLOCK_COUNT_UP) {
-                        CLOCK_COUNT_UP = TRUE;
-                    }
-                    
-                    // 重启定时器
-                    KillTimer(hwnd, 1);
-                    SetTimer(hwnd, 1, 1000, NULL);
-                    
-                    // 强制重绘窗口
                     InvalidateRect(hwnd, NULL, TRUE);
-                    
-                    // 确保重置后窗口置顶并可见
-                    HandleWindowReset(hwnd);
                     break;
                 }
                 case CLOCK_IDC_SET_COUNTDOWN_TIME: {
@@ -1349,6 +1359,10 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     break;
                 }
                 case CLOCK_IDM_POMODORO_START: {
+                    // 停止任何可能正在播放的通知音频
+                    extern void StopNotificationSound(void);
+                    StopNotificationSound();
+                    
                     if (!IsWindowVisible(hwnd)) {
                         ShowWindow(hwnd, SW_SHOW);
                     }
@@ -1470,6 +1484,10 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     ShowPomodoroLoopDialog(hwnd);
                     break;
                 case CLOCK_IDM_POMODORO_RESET: {
+                    // 停止任何可能正在播放的通知音频
+                    extern void StopNotificationSound(void);
+                    StopNotificationSound();
+                    
                     // 调用 ResetTimer 重置计时器状态
                     extern void ResetTimer(void);
                     ResetTimer();
@@ -1520,13 +1538,18 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     WriteConfigTimeoutAction("RESTART");
                     break;
                 }
+                case CLOCK_IDM_SLEEP: {
+                    CLOCK_TIMEOUT_ACTION = TIMEOUT_ACTION_SLEEP;
+                    WriteConfigTimeoutAction("SLEEP");
+                    break;
+                }
                 case CLOCK_IDM_CHECK_UPDATE: {
-                    // 调用异步检查更新函数
-                    CheckForUpdateAsync(hwnd);
+                    // 调用异步检查更新函数 - 非静默模式
+                    CheckForUpdateAsync(hwnd, FALSE);
                     break;
                 }
                 case CLOCK_IDM_OPEN_WEBSITE:
-                    CLOCK_TIMEOUT_ACTION = TIMEOUT_ACTION_OPEN_WEBSITE;
+                    // 不立即设置操作类型，而是等待对话框返回结果后再决定是否设置
                     ShowWebsiteDialog(hwnd);
                     break;
                 
@@ -1544,12 +1567,20 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     ShowNotificationDisplayDialog(hwnd);
                     break;
                 }
+                case CLOCK_IDM_NOTIFICATION_SETTINGS: {
+                    ShowNotificationSettingsDialog(hwnd);
+                    break;
+                }
                 case CLOCK_IDM_HELP: {
                     OpenUserGuide();
                     break;
                 }
                 case CLOCK_IDM_SUPPORT: {
                     OpenSupportPage();
+                    break;
+                }
+                case CLOCK_IDM_FEEDBACK: {
+                    OpenFeedbackPage();
                     break;
                 }
             }
@@ -1704,37 +1735,6 @@ refresh_window:
                 return 0;
             }
             break;
-        }
-        // 处理自定义的"开始默认倒计时"消息
-        case WM_USER+100: {
-            // 开始默认倒计时
-            // 1. 读取配置文件中的默认时间
-            extern int CLOCK_DEFAULT_START_TIME;
-            
-            // 2. 停止当前计时器
-            KillTimer(hwnd, 1);
-            
-            // 3. 设置新的倒计时
-            CLOCK_TOTAL_TIME = CLOCK_DEFAULT_START_TIME;
-            countdown_elapsed_time = 0;
-            countdown_message_shown = FALSE;
-            CLOCK_COUNT_UP = FALSE;
-            CLOCK_SHOW_CURRENT_TIME = FALSE;
-            
-            // 4. 确保窗口状态正确
-            CLOCK_IS_PAUSED = FALSE;
-            elapsed_time = 0;
-            message_shown = FALSE;
-            countup_message_shown = FALSE;
-            
-            // 5. 显示窗口并开始计时
-            ShowWindow(hwnd, SW_SHOW);
-            InvalidateRect(hwnd, NULL, TRUE);
-            SetTimer(hwnd, 1, 1000, NULL);
-            
-            // 确保窗口置顶
-            HandleWindowReset(hwnd);
-            return 0;
         }
         default:
             return DefWindowProc(hwnd, msg, wp, lp);

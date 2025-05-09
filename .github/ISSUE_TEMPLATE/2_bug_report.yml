@@ -1,43 +1,45 @@
-name: Bug 反馈
-description: "🛠️ 在报告问题之前，请先确认已更新到最新版本，确保问题不是由版本过旧引起的"
+name:  Bug 反馈
+description: "🛠️ 发现了一个小问题？来这里告诉我们吧～"
 title: "[Bug]: "
 labels: ["bug"]
 body:
   - type: input
     id: "expectation"
     attributes:
-      label: "预期情况"
-      description: "请描述您期望看到的结果或行为"  
+      label: "✨ 你期待的样子"
+      description: "软件本应该是什么样子的呢？描述一下你期望的美好情景～"  
     validations:
       required: false
   - type: textarea
     id: "describe-the-bug"
     attributes:
-      label: "实际情况"
-      description: "请详细描述您遇到的问题或错误，让我们更好地理解"  
+      label: "❓ 实际发生了什么"
+      description: "哎呀～出现问题了吗？请告诉我们你看到了什么，越详细越好哦～"  
     validations:
       required: true
   - type: textarea
     id: "reproduction-method"
     attributes:
-      label: "复现步骤"
-      description: "列出遇到问题之前执行的操作步骤，这有助于帮助我们快速重现"
-      placeholder: "例如：\n1. 点击了编辑模式\n2. 出现了..."
+      label: "📝 如何复现这个问题"
+      description: "能告诉我们是怎么遇到这个小bug的吗？按步骤写下来，我们就能更快地找到问题所在啦～"
+      placeholder: "例如：\n1. 点击了编辑模式\n2. 然后发生了...\n3. 呀！出问题啦～"
     validations:
       required: false
   - type: textarea
     id: "more"
     attributes:
-      label: "其他信息"
-      description: "如果有其他相关信息，欢迎提供哦～（如系统和系统版本等，可选）"
-      placeholder: "例如：\n系统：Windows 11\n版本：23H2"
+      label: "📌 其他小提示"
+      description: "还有什么想告诉我们的吗？系统信息、版本号都可以写在这里哦～"
+      placeholder: "例如：\n系统：Windows 11 \n版本：23H2"
     validations:
       required: false
   - type: checkboxes
     id: "latest-version"
     attributes:
-      label: "我已确认更新到最新版本"
-      description: "请先确认已更新到最新版本，确保问题不是由版本过旧引起的"  
+      label: "✅ 最后一步"
+      description: "在提交bug之前，请确认以下事项～"  
       options:
-        - label: 是的，我已是最新版本 🚀
+        - label: "⚡ 我已确认使用的是最新版本，不是旧版本哦～"
+          required: true
+        - label: "📋 我已经查看过常见问题和已知问题列表，确认这是个新bug～"
           required: true

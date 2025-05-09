@@ -85,7 +85,8 @@ typedef enum {
     TIMEOUT_ACTION_OPEN_FILE = 4, ///< 打开指定文件
     TIMEOUT_ACTION_SHOW_TIME = 5, ///< 显示当前时间
     TIMEOUT_ACTION_COUNT_UP = 6,   ///< 切换到正计时模式
-    TIMEOUT_ACTION_OPEN_WEBSITE = 7   ///< 打开网站
+    TIMEOUT_ACTION_OPEN_WEBSITE = 7, ///< 打开网站
+    TIMEOUT_ACTION_SLEEP = 8        ///< 睡眠
 } TimeoutActionType;
 
 extern TimeoutActionType CLOCK_TIMEOUT_ACTION;
@@ -307,6 +308,11 @@ void ShowColorMenu(HWND hwnd) {
     // 第二个分隔线
     AppendMenuW(hTimeoutMenu, MF_SEPARATOR, 0, NULL);
 
+    // 添加一个不可选择的提示选项
+    AppendMenuW(hTimeoutMenu, MF_STRING | MF_GRAYED | MF_DISABLED, 
+               0,  // 使用ID为0表示不可选菜单项
+               GetLocalizedString(L"以下超时动作为一次性", L"Following actions are one-time only"));
+
     // 7. 关机
     AppendMenuW(hTimeoutMenu, MF_STRING | (CLOCK_TIMEOUT_ACTION == TIMEOUT_ACTION_SHUTDOWN ? MF_CHECKED : MF_UNCHECKED),
                CLOCK_IDM_SHUTDOWN,
@@ -317,6 +323,11 @@ void ShowColorMenu(HWND hwnd) {
                CLOCK_IDM_RESTART,
                GetLocalizedString(L"重启", L"Restart"));
 
+    // 9. 睡眠
+    AppendMenuW(hTimeoutMenu, MF_STRING | (CLOCK_TIMEOUT_ACTION == TIMEOUT_ACTION_SLEEP ? MF_CHECKED : MF_UNCHECKED),
+               CLOCK_IDM_SLEEP,
+               GetLocalizedString(L"睡眠", L"Sleep"));
+
     // 将超时动作菜单添加到主菜单
     AppendMenuW(hMenu, MF_POPUP, (UINT_PTR)hTimeoutMenu, 
                 GetLocalizedString(L"超时动作", L"Timeout Action"));
@@ -324,7 +335,7 @@ void ShowColorMenu(HWND hwnd) {
     // 预设管理菜单
     HMENU hTimeOptionsMenu = CreatePopupMenu();
     AppendMenuW(hTimeOptionsMenu, MF_STRING, CLOCK_IDC_MODIFY_TIME_OPTIONS,
-                GetLocalizedString(L"修改快捷时间选项", L"Modify Time Options"));
+                GetLocalizedString(L"倒计时预设", L"Modify Quick Countdown Options"));
     
     // 启动设置子菜单
     HMENU hStartupSettingsMenu = CreatePopupMenu();
@@ -378,15 +389,8 @@ void ShowColorMenu(HWND hwnd) {
     AppendMenuW(hTimeOptionsMenu, MF_POPUP, (UINT_PTR)hStartupSettingsMenu,
                 GetLocalizedString(L"启动设置", L"Startup Settings"));
 
-    // 添加通知设置菜单
-    HMENU hNotificationMenu = CreatePopupMenu();
-    AppendMenuW(hNotificationMenu, MF_STRING, CLOCK_IDM_NOTIFICATION_CONTENT,
-                GetLocalizedString(L"内容", L"Content"));
-    AppendMenuW(hNotificationMenu, MF_STRING, CLOCK_IDM_NOTIFICATION_DISPLAY,
-                GetLocalizedString(L"显示", L"Display"));
-
-    // 添加通知设置父菜单
-    AppendMenuW(hTimeOptionsMenu, MF_POPUP, (UINT_PTR)hNotificationMenu,
+    // 添加通知设置菜单 - 修改为直接菜单项，不再使用子菜单
+    AppendMenuW(hTimeOptionsMenu, MF_STRING, CLOCK_IDM_NOTIFICATION_SETTINGS,
                 GetLocalizedString(L"通知设置", L"Notification Settings"));
 
     // 将预设管理菜单添加到主菜单
@@ -413,7 +417,6 @@ void ShowColorMenu(HWND hwnd) {
             strcmp(fontResources[i].fontName, "Moirai One Essence.ttf") == 0 ||
             strcmp(fontResources[i].fontName, "Silkscreen Essence.ttf") == 0 ||
             strcmp(fontResources[i].fontName, "Pixelify Sans Medium Essence.ttf") == 0 ||
-            strcmp(fontResources[i].fontName, "Rubik Glitch Pop Essence.ttf") == 0 ||
             strcmp(fontResources[i].fontName, "Rubik Burned Essence.ttf") == 0 ||
             strcmp(fontResources[i].fontName, "Rubik Glitch Essence.ttf") == 0 ||
             strcmp(fontResources[i].fontName, "ProFont IIx Nerd Font.ttf") == 0 ||
@@ -444,7 +447,6 @@ void ShowColorMenu(HWND hwnd) {
             strcmp(fontResources[i].fontName, "Moirai One Essence.ttf") == 0 ||
             strcmp(fontResources[i].fontName, "Silkscreen Essence.ttf") == 0 ||
             strcmp(fontResources[i].fontName, "Pixelify Sans Medium Essence.ttf") == 0 ||
-            strcmp(fontResources[i].fontName, "Rubik Glitch Pop Essence.ttf") == 0 ||
             strcmp(fontResources[i].fontName, "Rubik Burned Essence.ttf") == 0 ||
             strcmp(fontResources[i].fontName, "Rubik Glitch Essence.ttf") == 0 ||
             strcmp(fontResources[i].fontName, "ProFont IIx Nerd Font.ttf") == 0 ||
@@ -508,8 +510,14 @@ void ShowColorMenu(HWND hwnd) {
     // 在这里添加"关于"菜单项
     AppendMenuW(hAboutMenu, MF_STRING, CLOCK_IDM_ABOUT, GetLocalizedString(L"关于", L"About"));
 
+    // 添加分隔线
+    AppendMenuW(hAboutMenu, MF_SEPARATOR, 0, NULL);
+
     // 添加"支持"选项 - 打开赞助网页
     AppendMenuW(hAboutMenu, MF_STRING, CLOCK_IDM_SUPPORT, GetLocalizedString(L"支持", L"Support"));
+    
+    // 添加"反馈"选项 - 根据语言打开不同的反馈链接
+    AppendMenuW(hAboutMenu, MF_STRING, CLOCK_IDM_FEEDBACK, GetLocalizedString(L"反馈", L"Feedback"));
     
     // 添加分隔线
     AppendMenuW(hAboutMenu, MF_SEPARATOR, 0, NULL);

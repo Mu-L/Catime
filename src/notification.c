@@ -16,31 +16,12 @@
 #include "../include/language.h"
 #include "../include/notification.h"
 #include "../include/config.h"
-#include "../resource/resource.h"
+#include "../resource/resource.h"  // 包含所有ID和常量的定义
 #include <windowsx.h>  // 用于GET_X_LPARAM和GET_Y_LPARAM宏
 
-/**
- * 通知窗口相关常量定义
- */
-// 通知窗口尺寸与布局常量
-#define NOTIFICATION_MIN_WIDTH 350     // 通知窗口最小宽度(像素)
-#define NOTIFICATION_MAX_WIDTH 800     // 通知窗口最大宽度(像素)
-#define NOTIFICATION_HEIGHT 80       // 通知窗口高度(像素)
-#define NOTIFICATION_TIMER_ID 1001   // 通知超时计时器ID
-#define NOTIFICATION_CLASS_NAME L"CatimeNotificationClass"  // 通知窗口类名
-// 窗口界面元素常量
-#define CLOSE_BTN_SIZE 16            // 关闭按钮的大小(像素)
-#define CLOSE_BTN_MARGIN 10          // 关闭按钮边距(像素)
-
-// 动画效果相关常量
-#define ANIMATION_TIMER_ID 1002      // 动画计时器ID
-#define ANIMATION_STEP 5             // 每步透明度变化量(0-255)
-#define ANIMATION_INTERVAL 15        // 动画帧间隔(毫秒)
-
 // 从config.h引入
-extern int NOTIFICATION_TIMEOUT_MS; // 修改：使用extern关键字声明，不再定义
-// 新增：通知最大透明度配置
-extern int NOTIFICATION_MAX_OPACITY;
+// 新增：通知类型配置
+extern NotificationType NOTIFICATION_TYPE;
 
 /**
  * 通知窗口动画状态枚举
@@ -73,6 +54,113 @@ int CalculateTextWidth(HDC hdc, const wchar_t* text, HFONT font) {
 }
 
 /**
+ * @brief 显示通知（根据配置的通知类型）
+ * @param hwnd 父窗口句柄，用于获取应用实例和计算位置
+ * @param message 要显示的通知消息文本(UTF-8编码)
+ * 
+ * 根据配置的通知类型显示不同风格的通知
+ */
+void ShowNotification(HWND hwnd, const char* message) {
+    // 读取最新的通知类型配置
+    ReadNotificationTypeConfig();
+    
+    // 根据通知类型选择对应的通知方式
+    switch (NOTIFICATION_TYPE) {
+        case NOTIFICATION_TYPE_CATIME:
+            ShowToastNotification(hwnd, message);
+            break;
+        case NOTIFICATION_TYPE_SYSTEM_MODAL:
+            ShowModalNotification(hwnd, message);
+            break;
+        case NOTIFICATION_TYPE_OS:
+            ShowTrayNotification(hwnd, message);
+            break;
+        default:
+            // 默认使用Catime通知窗口
+            ShowToastNotification(hwnd, message);
+            break;
+    }
+}
+
+/**
+ * 模态对话框线程参数结构体
+ */
+typedef struct {
+    HWND hwnd;               // 父窗口句柄
+    char message[512];       // 消息内容
+} DialogThreadParams;
+
+/**
+ * @brief 显示模态对话框的线程函数
+ * @param lpParam 线程参数，DialogThreadParams结构体指针
+ * @return DWORD 线程返回值
+ */
+DWORD WINAPI ShowModalDialogThread(LPVOID lpParam) {
+    DialogThreadParams* params = (DialogThreadParams*)lpParam;
+    
+    // 将UTF-8消息转换为宽字符以支持Unicode显示
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, params->message, -1, NULL, 0);
+    wchar_t* wmessage = (wchar_t*)malloc(wlen * sizeof(wchar_t));
+    if (!wmessage) {
+        // 内存分配失败，直接显示英文版本
+        MessageBoxA(params->hwnd, params->message, "Catime", MB_OK);
+        free(params);
+        return 0;
+    }
+    
+    MultiByteToWideChar(CP_UTF8, 0, params->message, -1, wmessage, wlen);
+    
+    // 显示模态对话框，固定标题为"Catime"
+    MessageBoxW(params->hwnd, wmessage, L"Catime", MB_OK);
+    
+    // 释放分配的内存
+    free(wmessage);
+    free(params);
+    
+    return 0;
+}
+
+/**
+ * @brief 显示系统模态对话框通知
+ * @param hwnd 父窗口句柄
+ * @param message 要显示的通知消息文本(UTF-8编码)
+ * 
+ * 在单独线程中显示模态对话框，不会阻塞主程序运行
+ */
+void ShowModalNotification(HWND hwnd, const char* message) {
+    // 创建线程参数结构体
+    DialogThreadParams* params = (DialogThreadParams*)malloc(sizeof(DialogThreadParams));
+    if (!params) return;
+    
+    // 复制参数
+    params->hwnd = hwnd;
+    strncpy(params->message, message, sizeof(params->message) - 1);
+    params->message[sizeof(params->message) - 1] = '\0';
+    
+    // 创建新线程来显示对话框
+    HANDLE hThread = CreateThread(
+        NULL,               // 默认安全属性
+        0,                  // 默认堆栈大小
+        ShowModalDialogThread, // 线程函数
+        params,             // 线程参数
+        0,                  // 立即运行线程
+        NULL                // 不接收线程ID
+    );
+    
+    // 如果线程创建失败，释放资源
+    if (hThread == NULL) {
+        free(params);
+        // 回退到非阻塞的通知方式
+        MessageBeep(MB_OK);
+        ShowTrayNotification(hwnd, message);
+        return;
+    }
+    
+    // 关闭线程句柄，让系统自动清理
+    CloseHandle(hThread);
+}
+
+/**
  * @brief 显示自定义样式的提示通知
  * @param hwnd 父窗口句柄，用于获取应用实例和计算位置
  * @param message 要显示的通知消息文本(UTF-8编码)
@@ -93,9 +181,6 @@ void ShowToastNotification(HWND hwnd, const char* message) {
     ReadNotificationTimeoutConfig();
     // 新增：读取最新的通知透明度配置
     ReadNotificationOpacityConfig();
-    
-    // 播放通知声音
-    MessageBeep(MB_ICONINFORMATION);
     
     // 注册通知窗口类（如果还未注册）
     if (!isClassRegistered) {

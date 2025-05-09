@@ -1,4 +1,3 @@
-
 <p align="center">
 <a href="https://github.com/vladelaina/Catime" target="_blank">
 <img align="center" alt="catime" width="230" src="Images/catime.png" />
@@ -6,13 +5,13 @@
   
 <p align="center">
   <a href="https://qm.qq.com/q/LgscIMw9i0" target="_blank">
-    <img src="https://img.shields.io/badge/QQ%20Group-Join-blue?logo=tencentqq&logoColor=white&style=for-the-badge" alt="Join QQ Group" />
+    <img src="https://img.shields.io/badge/QQ%20Group%20-%20%201027327912-blue?logo=tencentqq&logoColor=white&style=for-the-badge" alt="Join QQ Group" />
   </a>
   <a href="https://discord.com/invite/W3tW2gtp6g" target="_blank">
     <img src="https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white&style=for-the-badge" alt="Join Discord" />
   </a>
-  <a href="https://catime.vladelaina.com/support" target="_blank">
-    <img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-Support%20now-critical?logo=buymeacoffee&logoColor=white&style=for-the-badge" alt="Buy me a coffee" />
+  <a href="https://vladelaina.github.io/Catime/support" target="_blank">
+    <img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-Support%20-critical?logo=buymeacoffee&logoColor=white&style=for-the-badge" alt="Buy me a coffee" />
   </a>
 
   <br/>
@@ -26,8 +25,8 @@
   <a href="https://github.com/vladelaina/Catime/releases">
     <img alt="Downloads" src="https://img.shields.io/github/downloads/vladelaina/Catime/total?label=Downloads&style=for-the-badge&color=orange" />
   </a>
-  <a href="https://github.com/users/vladelaina/projects/2" target="_blank">
-    <img src="https://img.shields.io/badge/To%20Do-12%25%20Complete-00C853?style=for-the-badge&logo=todoist&logoColor=white" alt="To-Do" />
+  <a href="https://github.com/vladelaina/Catime/releases" target="_blank">
+    <img src="https://img.shields.io/badge/Software%20Size-227%20KB-blue?logo=appveyor&logoColor=white&style=for-the-badge" alt="Software Size" />
   </a>
 </p>
 
@@ -49,14 +48,14 @@
 
 **English** | [**简体中文**](https://github.com/vladelaina/Catime)
 
-## [🌟Features](https://catime.vladelaina.com/#core-features)
+## [🌟Features](https://vladelaina.github.io/Catime/#core-features)
 
 - **Minimalist Design**: Transparent interface, click-through capability, free dragging and resizing, no complex graphical settings interface, doesn't feel like running an additional application
 - **Flexible Timing**: Quick presets, custom time input, display current time (12/24-hour format), countdown, count up, Pomodoro timer
 - **Timeout Actions**: Display message, show current time, count up, lock screen, open file/application, open website, shutdown, restart
 - **Rich Customization**: 47 fonts, 15 preset colors, support for color value input, color palette selection, real-time preview
 
-## [💡Use Cases](https://catime.vladelaina.com/#use-cases)
+## [Use Cases](https://vladelaina.github.io/Catime/#use-cases)
 
 - 👔 Countdown to end of work
 - 🍅 Pomodoro timer
@@ -73,7 +72,7 @@
 
  Demo video (based on V1.0.5): <img src="https://www.bilibili.com/favicon.ico" width="20" height="20"> [BiliBili](https://www.bilibili.com/video/BV1AsoKYgE3r/)
 
-## [📑User Guide](https://catime.vladelaina.com/guide)
+## [📑User Guide](https://vladelaina.github.io/Catime/guide)
 
 - **Left-click tray icon**: Set **time**
 - **Right-click tray icon**: Settings **menu**
@@ -91,7 +90,7 @@ Settings are saved in `C:\Users\username\AppData\Local\Catime\config.txt`
 </a>
 
 
-## [✨Acknowledgements](https://catime.vladelaina.com/#thanks) 
+## [✨Acknowledgements](https://vladelaina.github.io/Catime/#thanks) 
 
 Special thanks to the following contributors:
 <table>
@@ -124,7 +123,7 @@ Special thanks to the following contributors:
         <a href="https://space.bilibili.com/1708573954"><img src="https://i1.hdslb.com/bfs/face/7fe7cfba25dd086f9b4dbb8433b5db237a5ff98b.jpg@240w_240h_1c_1s_!web-avatar-space-header.avif" width="100px;" alt="我是无名吖"/><br /><sub><b>我是无名吖</b></sub></a><br />
       </td>
       <td align="center" valign="top" width="14.28%">
-        <a href="https://github.com/flying-hilichurl"><img src="https://avatars.githubusercontent.com/u/187168840?v=4" width="100px;" alt="flying-hilichurl"/><br /><sub><b>flying-hilichurl</b></sub></a><br />
+        <a href="https://github.com/flying-hilichurl"><img src="https://github.com/user-attachments/assets/e83d0c15-cfe1-46d0-9904-c4dfda7baf0a" width="100px;" alt="金麟"/><br /><sub><b>金麟</b></sub></a><br />
       </td>
       <td align="center" valign="top" width="14.28%">
         <a href="https://space.bilibili.com/161061562"><img src="https://i1.hdslb.com/bfs/face/ffbffc12d4cb51d158210f26f45bb1b369eaf730.jpg@240w_240h_1c_1s_!web-avatar-space-header.avif" width="100px;" alt="双脚猫"/><br /><sub><b>双脚猫</b></sub></a><br />
@@ -133,7 +132,7 @@ Special thanks to the following contributors:
         <a href="https://github.com/rsyqvthv"><img src="https://avatars.githubusercontent.com/u/2230369?v=4" width="100px;" alt="rsyqvthv"/><br /><sub><b>rsyqvthv</b></sub></a><br />
       </td>
       <td align="center" valign="top" width="14.28%">
-        <a href="https://space.bilibili.com/297146893"><img src="https://i1.hdslb.com/bfs/face/60bd4649e39b9324998c0fede4dbc18a5baa7311.jpg@240w_240h_1c_1s_!web-avatar-space-header.avif" width="100px;" alt="洋仓鼠"/><br /><sub><b>洋仓鼠</b></sub></a><br />
+        <a href="https://space.bilibili.com/297146893"><img src="https://github.com/user-attachments/assets/9b6a9293-c0f7-4c03-a101-eff670dd0154" width="100px;" alt="君影"/><br /><sub><b>君影</b></sub></a><br />
       </td>
       <td align="center" valign="top" width="14.28%">
         <a href="https://space.bilibili.com/3546380188519387"><img src="https://i1.hdslb.com/bfs/face/a6396d677f543a173aa11f3d3cd2943a96121dda.jpg@240w_240h_1c_1s_!web-avatar-space-header.avif" width="100px;" alt="学习马楼"/><br /><sub><b>学习马楼</b></sub></a><br />
@@ -172,7 +171,27 @@ Special thanks to the following contributors:
       <td align="center" valign="top" width="14.28%">
         <a href="https://github.com/xxtui-main/xxtui"><img src="https://avatars.githubusercontent.com/u/31737411?v=4" width="100px;" alt="x.j"/><br /><sub><b>x.j</b></sub></a><br />
       </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/kissholic"><img src="https://avatars.githubusercontent.com/u/26087790?v=4" width="100px;" alt="kissholic"/><br /><sub><b>kissholic</b></sub></a><br />
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href=""><img src="https://github.com/user-attachments/assets/ef1ff137-7430-420c-8142-562a48803f56" width="100px;" alt="Alnilam"/><br /><sub><b>Alnilam</b></sub></a><br />
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/pyqmlp"><img src="https://github.com/user-attachments/assets/fb0473e9-db9d-4f63-ac8d-4aa1d9ee7579" width="100px;" alt="柒"/><br /><sub><b>柒</b></sub></a><br />
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/Mapaler"><img src="https://avatars.githubusercontent.com/u/6565860?v=4" width="100px;" alt="枫谷剑仙"/><br /><sub><b>枫谷剑仙</b></sub></a><br />
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/Crazy-A2"><img src="https://avatars.githubusercontent.com/u/68056912?v=4" width="100px;" alt="Marial"/><br /><sub><b>Marial</b></sub></a><br />
+      </td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://space.bilibili.com/507572706"><img src="https://github.com/user-attachments/assets/8bf7a9e8-749a-47b6-976c-6798bacea6d2" width="100px;" alt="卓越方达"/><br /><sub><b>卓越方达</b></sub></a><br />
+      </td>
+    </tr>  
   </tbody>
 </table>
 
@@ -202,7 +221,7 @@ Font licenses:
     Mystery Quest Essence.ttf, Noto Nastaliq Urdu Medium Essence.ttf, Piedra Essence.ttf,
     Pixelify Sans Medium Essence.ttf, Press Start 2P Essence.ttf,
     Rubik Bubbles Essence.ttf, Rubik Burned Essence.ttf, Rubik Glitch Essence.ttf,
-    Rubik Glitch Pop Essence.ttf, Rubik Marker Hatch Essence.ttf,
+    Rubik Marker Hatch Essence.ttf,
     Rubik Puddles Essence.ttf, Rubik Vinyl Essence.ttf, Rubik Wet Paint Essence.ttf,
     Ruge Boogie Essence.ttf, Sevillana Essence.ttf, Silkscreen Essence.ttf,
     Stick Essence.ttf, Underdog Essence.ttf, Wallpoet Essence.ttf,
