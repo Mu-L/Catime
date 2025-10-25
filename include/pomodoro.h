@@ -1,41 +1,22 @@
 /**
  * @file pomodoro.h
- * @brief Pomodoro timer functionality
- * 
- * Defines the Pomodoro technique timer phases and state management
+ * @brief Pomodoro timer phases and state
  */
 
 #ifndef POMODORO_H
 #define POMODORO_H
 
-/**
- * @brief Pomodoro timer phases
- */
 typedef enum {
-    POMODORO_PHASE_IDLE = 0,        /**< No active Pomodoro session */
-    POMODORO_PHASE_WORK,           /**< Work phase (typically 25 minutes) */
-    POMODORO_PHASE_BREAK,          /**< Short break (typically 5 minutes) */
-    POMODORO_PHASE_LONG_BREAK      /**< Long break (typically 15-30 minutes) */
+    POMODORO_PHASE_IDLE = 0,
+    POMODORO_PHASE_WORK,
+    POMODORO_PHASE_BREAK,
+    POMODORO_PHASE_LONG_BREAK
 } POMODORO_PHASE;
 
-/** @brief Current Pomodoro phase state */
 extern POMODORO_PHASE current_pomodoro_phase;
-
-/** @brief Index of current time configuration being used */
 extern int current_pomodoro_time_index;
-
-/** @brief Number of completed Pomodoro work cycles */
 extern int complete_pomodoro_cycles;
-
-/** @brief Pomodoro time configurations array (up to 10 entries) */
 extern int POMODORO_TIMES[10];
-
-/** @brief Number of active Pomodoro time configurations */
 extern int POMODORO_TIMES_COUNT;
-
-/**
- * @note InitializePomodoro() function is declared in timer_events.h
- * @see timer_events.h for Pomodoro initialization
- */
 
 #endif
